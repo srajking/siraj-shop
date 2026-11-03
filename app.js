@@ -2,7 +2,7 @@ let count = 0;
 const countEl = document.querySelector('#count');
 document.querySelectorAll('.add').forEach(btn => {
   btn.addEventListener('click', () => {
-    count++;
+    count += 1;
     countEl.textContent = count;
     console.log('cart:', count);
   });
