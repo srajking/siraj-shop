@@ -16,3 +16,6 @@ body { margin: 0; font-family: Plex, sans-serif;
   border-radius: 10px; background: #0F172A; color: #fff;
   font: inherit; cursor: pointer; }
 .price { color: #1A56DB; font-weight: 700; }
+
+/* footer */
+.footer { padding: 20px; }
