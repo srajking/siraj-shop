@@ -19,3 +19,4 @@ body { margin: 0; font-family: Plex, sans-serif;
 
 /* footer */
 .footer { padding: 20px; }
+.top h1 { letter-spacing: 1px; }
