@@ -1,0 +1,17 @@
+body { margin: 0; font-family: Plex, sans-serif;
+  background: #F1F4F9; color: #1d2433; }
+.top { display: flex; justify-content: space-between;
+  align-items: center; padding: 14px 24px;
+  background: #1A56DB; color: #fff; }
+.top h1 { margin: 0; font-size: 20px; }
+.cart b { padding: 2px 10px; border-radius: 10px;
+  background: #fff; color: #1A56DB; }
+.grid { display: grid; gap: 16px; padding: 24px;
+  grid-template-columns: repeat(3, 1fr); }
+.card { padding: 16px; border-radius: 14px; background: #fff;
+  box-shadow: 0 6px 18px rgb(0 0 0 / .08); }
+.card h2 { margin: 0; font-size: 17px; }
+.price { color: #1A56DB; font-weight: 700; }
+.add { width: 100%; padding: 8px; border: 0;
+  border-radius: 10px; background: #0F172A; color: #fff;
+  font: inherit; cursor: pointer; }
