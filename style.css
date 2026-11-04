@@ -28,3 +28,4 @@ body { margin: 0; font-family: Plex, sans-serif;
 .search { width: 100%; padding: 8px; }
 .reviews { padding: 16px; }
 .reviews h2 { font-size: 18px; }
+.stars { color: #F59E0B; }
