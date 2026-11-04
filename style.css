@@ -26,3 +26,4 @@ body { margin: 0; font-family: Plex, sans-serif;
 .note { font-size: 13px; }
 .price { font-size: 20px; letter-spacing: .5px; }
 .search { width: 100%; padding: 8px; }
+.reviews { padding: 16px; }
