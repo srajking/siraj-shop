@@ -1,8 +1,6 @@
 .env
 *.log
 dist/
-.DS_Store
-.vscode/
 /build
 img/*.psd
 **/temp/
