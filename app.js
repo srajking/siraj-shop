@@ -7,3 +7,6 @@ document.querySelectorAll('.add').forEach(btn => {
     console.log('cart items:', count);
   });
 });
+function discount(sum) {
+  return sum >= 10000 ? sum * 0.9 : sum;
+}
