@@ -3,3 +3,7 @@
 dist/
 .DS_Store
 .vscode/
+/build
+img/*.psd
+**/temp/
+!important.log
