@@ -4,6 +4,6 @@ document.querySelectorAll('.add').forEach(btn => {
   btn.addEventListener('click', () => {
     count += 1;
     countEl.textContent = count;
-    console.log('items in cart:', count);
+    console.log('cart items:', count);
   });
 });
