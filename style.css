@@ -21,3 +21,4 @@ body { margin: 0; font-family: Plex, sans-serif;
 .footer { padding: 20px; }
 .top h1 { letter-spacing: 1px; }
 .footer { text-align: center; }
+.footer { font-size: 14px; }
