@@ -18,7 +18,7 @@ body { margin: 0; font-family: Plex, sans-serif;
 .price { color: #1A56DB; font-weight: 700; }
 
 /* footer */
-.footer { padding: 20px; }
+.footer { padding: 24px; }
 .top h1 { letter-spacing: 1px; }
 .footer { text-align: center; }
 .footer { font-size: 14px; }
