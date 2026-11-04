@@ -5,3 +5,4 @@ dist/
 img/*.psd
 **/temp/
 !important.log
+config.local.js
