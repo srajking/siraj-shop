@@ -6,3 +6,5 @@ img/*.psd
 **/temp/
 !important.log
 config.local.js
+# passwords
+secret.txt
