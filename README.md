@@ -4,4 +4,4 @@ A small shop page for the Git book.
 
 Open the shop: `index.html` in any browser.
 
-Delivery inside Baghdad only.
+Delivery to Baghdad and Basra.
