@@ -4,7 +4,6 @@ document.querySelectorAll('.add').forEach(btn => {
   btn.addEventListener('click', () => {
     count += 1;
     countEl.textContent = count;
-    console.log('cart items:', count);
   });
 });
 function discount(sum) {
