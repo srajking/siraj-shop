@@ -25,7 +25,7 @@ body { margin: 0; font-family: Plex, sans-serif;
 .note { color: #64748B; }
 .note { font-size: 13px; }
 .price { font-size: 20px; letter-spacing: .5px; }
-.search { width: 100%; padding: 8px; }
+.search { width: 100%; padding: 8px; box-sizing: border-box; }
 .reviews { padding: 16px; }
 .reviews h2 { font-size: 18px; }
 .stars { color: #F59E0B; }
