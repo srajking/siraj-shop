@@ -4,7 +4,6 @@ document.querySelectorAll('.add').forEach(btn => {
   btn.addEventListener('click', () => {
     count += 1;
     countEl.textContent = count;
-    console.log('added, count =', count);
     btn.textContent = 'تمت الاضافة';
   });
 });
