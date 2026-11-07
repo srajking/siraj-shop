@@ -21,3 +21,10 @@ jobs:
             echo "::error::Remove console.log before merging"
             exit 1
           fi
+
+      - name: Nothing after </html>
+        run: |
+          if grep -n "</html>." *.html; then
+            echo "::error::Move this content inside <body>"
+            exit 1
+          fi
