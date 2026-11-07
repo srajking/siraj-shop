@@ -1,0 +1,23 @@
+name: Shop checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: List the files
+        run: ls
+
+      - name: No debug logs
+        run: |
+          if grep -n "console.log" app.js; then
+            echo "::error::Remove console.log before merging"
+            exit 1
+          fi
