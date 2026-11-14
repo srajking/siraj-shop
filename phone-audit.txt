@@ -1,5 +1,5 @@
- 320px  layout=320  scale=1.00  h1=20.0px  button=56.0px  sideways-scroll=no
- 375px  layout=375  scale=1.00  h1=20.0px  button=56.0px  sideways-scroll=no
+ 320px  layout=320  scale=1.00  h1=20.0px  button=36.0px  sideways-scroll=no
+ 375px  layout=375  scale=1.00  h1=20.0px  button=36.0px  sideways-scroll=no
  768px  layout=768  scale=1.00  h1=20.0px  button=36.0px  sideways-scroll=no
 1024px  layout=1024  scale=1.00  h1=20.0px  button=35.0px  sideways-scroll=no
 1440px  layout=1440  scale=1.00  h1=20.0px  button=35.0px  sideways-scroll=no

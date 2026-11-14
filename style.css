@@ -9,6 +9,12 @@ body { margin: 0; font-family: Plex, sans-serif;
 .grid { display: grid; gap: clamp(.5rem, 3vw, 1rem);
   padding: clamp(.75rem, 4vw, 1.5rem);
   grid-template-columns: repeat(3, 1fr); }
+@media (width < 900px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (width < 600px) {
+  .grid { grid-template-columns: 1fr; }
+}
 .card { padding: clamp(.5rem, 3vw, 1rem); border-radius: 14px; background: #fff;
   box-shadow: 0 6px 18px rgb(0 0 0 / .08); }
 .card img { display: block; width: 100%; height: auto;
