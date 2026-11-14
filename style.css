@@ -46,6 +46,11 @@ body { margin: 0; font-family: Plex, sans-serif;
 .newsletter { display: flex; gap: 8px; }
 .newsletter input { flex: 1; }
 
+/* forms and touch targets */
+input, button { font: inherit; }
+.search, .add, .menu-btn, .newsletter input, .newsletter button { min-height: 44px; }
+.links a, .footer a { display: inline-flex; align-items: center; min-height: 44px; }
+
 /* larger screens */
 @media (width >= 600px) {
   .top { padding: 14px 24px; }
