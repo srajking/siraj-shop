@@ -11,6 +11,8 @@ body { margin: 0; font-family: Plex, sans-serif;
   grid-template-columns: repeat(3, 1fr); }
 .card { padding: clamp(.5rem, 3vw, 1rem); border-radius: 14px; background: #fff;
   box-shadow: 0 6px 18px rgb(0 0 0 / .08); }
+.card img { display: block; width: 100%; height: auto;
+  aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; }
 .card h2 { margin: 0; font-size: 17px; }
 .price { color: #1A56DB; font-weight: 700; }
 .add { width: 100%; padding: 8px; border: 0;
