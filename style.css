@@ -51,6 +51,13 @@ input, button { font: inherit; }
 .search, .add, .menu-btn, .newsletter input, .newsletter button { min-height: 44px; }
 .links a, .footer a { display: inline-flex; align-items: center; min-height: 44px; }
 
+/* cards adapt to the products area, not the screen */
+.grid { container: products / inline-size; }
+@container products (width >= 1200px) {
+  .card img { aspect-ratio: 16 / 9; }
+  .add { justify-self: start; width: auto; padding-inline: 32px; }
+}
+
 /* larger screens */
 @media (width >= 600px) {
   .top { padding: 14px 24px; }
