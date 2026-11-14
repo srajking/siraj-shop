@@ -1,0 +1,5 @@
+ 320px  layout=980  scale=0.33  h1=6.5px  button=11.8px  sideways-scroll=no
+ 375px  layout=980  scale=0.38  h1=7.7px  button=13.8px  sideways-scroll=no
+ 768px  layout=980  scale=0.78  h1=15.7px  button=28.2px  sideways-scroll=no
+1024px  layout=1024  scale=1.00  h1=20.0px  button=35.0px  sideways-scroll=no
+1440px  layout=1440  scale=1.00  h1=20.0px  button=35.0px  sideways-scroll=no
