@@ -15,3 +15,15 @@ document.querySelectorAll('.add').forEach(btn => {
 function discount(sum) {
   return sum >= 10000 ? sum * 0.9 : sum;
 }
+
+const menuBtn = document.querySelector('.menu-btn'), menu = document.getElementById('menu');
+menuBtn.addEventListener('click', () => {
+  const open = menuBtn.getAttribute('aria-expanded') === 'true';
+  menuBtn.setAttribute('aria-expanded', String(!open));
+  menu.classList.toggle('open', !open);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && menu.classList.contains('open')) {
+    menuBtn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); menuBtn.focus();
+  }
+});
