@@ -72,3 +72,15 @@ input, button { font: inherit; }
   .links { display: flex; flex-direction: row; flex-wrap: wrap; flex: 0 1 auto; order: 0; }
   .menu-btn { display: none; }
 }
+
+/* paper */
+@page { size: A4; margin: 15mm; }
+@media print {
+  .menu-btn, .links, .search, .add, .newsletter { display: none; }
+  body, .top { background: none; color: #000; }
+  .top { position: static; padding: 0 0 8px; border-bottom: 2px solid #000; }
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .card { break-inside: avoid; box-shadow: none; border: 1px solid #999; }
+  .price, .cart b { color: #000; }
+  .footer a[href]::after { content: " (" attr(href) ")"; }
+}
