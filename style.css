@@ -48,8 +48,8 @@ body { margin: 0; font-family: Plex, sans-serif;
 .reviews { padding: 16px; }
 .reviews h2 { font-size: 1.125rem; }
 .stars { color: #F59E0B; }
-.newsletter { display: flex; gap: 8px; }
-.newsletter input { flex: 1; }
+.newsletter { display: flex; flex-wrap: wrap; gap: 8px; }
+.newsletter input { flex: 1 1 12rem; }
 
 /* forms and touch targets */
 input, button { font: inherit; }
