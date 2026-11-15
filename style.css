@@ -88,3 +88,4 @@ input, button { font: inherit; }
 .toast { position: fixed; inset-inline: 0; bottom: 16px; margin: 0 auto; width: fit-content; padding: .6em 1.2em; border-radius: 999px;
   background: #1f2937; color: #fff; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .toast.show { opacity: 1; }
+.card .stock { display: block; margin-top: .3em; font-size: .85em; opacity: .8; }

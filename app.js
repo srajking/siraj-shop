@@ -55,6 +55,20 @@
     countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
   }
   render();
+  const stockServer = { 'دفتر A5': 12, 'حقيبة ظهر': 3 };   // pretend server: no record for the pen
+  function checkStock(name) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => (name in stockServer ? resolve(stockServer[name]) : reject(new Error('no stock record: ' + name))), 300);
+    });
+  }
+  function badge(i, text) {
+    const tag = document.createElement('small');
+    tag.className = 'stock';
+    tag.textContent = text;
+    document.querySelectorAll('.card')[i].append(tag);
+  }
+  Promise.allSettled(catalog.map(p => checkStock(p.name)))
+    .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
   const toast = document.createElement('p');
   toast.className = 'toast';
   toast.setAttribute('role', 'status');
