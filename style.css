@@ -84,3 +84,4 @@ input, button { font: inherit; }
   .price, .cart b { color: #000; }
   .footer a[href]::after { content: " (" attr(href) ")"; }
 }
+.price .member { font-size: .8em; font-weight: 400; opacity: .75; }
