@@ -65,7 +65,7 @@
     const tag = document.createElement('small');
     tag.className = 'stock';
     tag.textContent = text;
-    document.querySelectorAll('.card')[i].append(tag);
+    document.querySelectorAll('.card .price')[i].append(tag);
   }
   Promise.allSettled(catalog.map(p => checkStock(p.name)))
     .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
