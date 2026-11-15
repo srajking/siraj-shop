@@ -111,6 +111,22 @@
     showQty(btn, name);
   });
 
+  const cartEl = document.querySelector('.cart');
+  cartEl.setAttribute('role', 'button');
+  cartEl.tabIndex = 0;
+  function openMiniCart() {
+    const box = document.createElement('div');
+    box.className = 'mini-cart';
+    box.setAttribute('role', 'dialog');
+    box.textContent = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ') || 'السلة فارغة';
+    document.body.append(box);
+    const ctrl = new AbortController();             // one switch for everything this box listens to
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { box.remove(); ctrl.abort(); }
+    }, { signal: ctrl.signal });
+  }
+  cartEl.addEventListener('click', openMiniCart);
+
   const menuBtn = document.querySelector('.menu-btn'), menu = document.getElementById('menu');
   menuBtn.addEventListener('click', () => {
     const open = menuBtn.getAttribute('aria-expanded') === 'true';
