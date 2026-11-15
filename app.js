@@ -29,7 +29,21 @@ function loadCart() {
     return new Cart();
   }
 }
-const cart = loadCart();
+const MUTATORS = new Set(['add']);             // methods that change the cart
+function reactive(target, onChange) {
+  return new Proxy(target, {
+    get(t, key) {
+      const value = Reflect.get(t, key, t);     // getters run on the real cart: #items lives there
+      if (typeof value !== 'function') return value;
+      return (...args) => {
+        const out = value.apply(t, args);       // this = the real cart, not the proxy
+        if (MUTATORS.has(key)) onChange();
+        return out;
+      };
+    },
+  });
+}
+const cart = reactive(loadCart(), () => render());
 function render() {
   const { count, total } = cart.summary();
   countEl.textContent = count;
@@ -79,7 +93,6 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
   cart.add(name, price.amount);
   localStorage.setItem('cart', JSON.stringify(cart));
-  render();
   showToast('اضيف: ' + name);
   showQty(btn, name);
 });
