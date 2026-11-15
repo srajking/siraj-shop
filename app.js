@@ -80,8 +80,13 @@
     clearTimeout(hideTimer);
     hideTimer = setTimeout(() => toast.classList.remove('show'), 2000);
   }
+  async function canAdd(name) {
+    const left = await checkStock(name).catch(() => Infinity);   // no record: do not block
+    return cart.qty(name) < left;
+  }
   document.querySelectorAll('.add').forEach((btn, i) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
+      if (!(await canAdd(catalog[i].name))) { showToast('لا يوجد مخزون كاف: ' + catalog[i].name); return; }
       cart.add(catalog[i].name, catalog[i].price.amount);
       localStorage.setItem('cart', JSON.stringify(cart));
       render();
