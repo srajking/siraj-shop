@@ -2,21 +2,19 @@
   'use strict';
   const countEl = document.querySelector('#count');
   const totalEl = document.querySelector('#total');
+  const sumOf = items => items.reduce((a, b) => a + b, 0);
+  const discount = sum => (sum >= Cart.LIMIT ? sum * Cart.RATE : sum);
   class Cart {
     static LIMIT = 10000;
     static RATE = 0.9;
-    #count = 0;
-    #sum = 0;
-    add(price) {
-      this.#count += 1;
-      this.#sum += price;
-    }
-    get count() { return this.#count; }
-    get total() { return this.#sum >= Cart.LIMIT ? this.#sum * Cart.RATE : this.#sum; }
-    toJSON() { return { count: this.#count, sum: this.#sum }; }
+    #items = [];
+    add(price) { this.#items = [...this.#items, price]; }
+    get count() { return this.#items.length; }
+    get total() { return discount(sumOf(this.#items)); }
+    toJSON() { return { items: this.#items }; }
     static from(data) {
       const c = new Cart();
-      if (data) { c.#count = data.count; c.#sum = data.sum; }
+      if (data?.items) c.#items = [...data.items];
       return c;
     }
   }
