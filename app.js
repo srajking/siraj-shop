@@ -47,7 +47,16 @@
     tag.textContent = ' · للاعضاء ' + p.price.amount.toLocaleString('en-US');
     document.querySelectorAll('.card .price')[i].append(tag);
   });
-    const cart = Cart.from(JSON.parse(localStorage.getItem('cart')));
+  function loadCart() {
+    try {
+      return Cart.from(JSON.parse(localStorage.getItem('cart')));
+    } catch (err) {
+      console.warn(new Error('saved cart is broken, starting empty', { cause: err }));
+      localStorage.removeItem('cart');
+      return new Cart();
+    }
+  }
+  const cart = loadCart();
   function render() {
     const { count, total } = cart.summary();
     countEl.textContent = count;
