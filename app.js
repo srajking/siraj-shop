@@ -13,8 +13,13 @@
       this.#items.set(name, { price, qty });
     }
     qty(name) { return this.#items.get(name)?.qty ?? 0; }
-    get count() { return sumOf([...this.#items.values()].map(i => i.qty)); }
-    get total() { return discount(sumOf([...this.#items.values()].map(i => i.price * i.qty))); }
+    *[Symbol.iterator]() { yield* this.#items; }
+    summary() {
+      const items = [...this.#items.values()];
+      const count = sumOf(items.map(i => i.qty));
+      const total = discount(sumOf(items.map(i => i.price * i.qty)));
+      return { count, total };
+    }
     toJSON() { return { items: [...this.#items] }; }
     static from(data) {
       const c = new Cart();
@@ -44,8 +49,10 @@
   });
     const cart = Cart.from(JSON.parse(localStorage.getItem('cart')));
   function render() {
-    countEl.textContent = cart.count;
-    totalEl.textContent = cart.total.toLocaleString('en-US');
+    const { count, total } = cart.summary();
+    countEl.textContent = count;
+    totalEl.textContent = total.toLocaleString('en-US');
+    countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
   }
   render();
   document.querySelectorAll('.add').forEach((btn, i) => {
