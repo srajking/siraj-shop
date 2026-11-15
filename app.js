@@ -93,15 +93,22 @@
     const left = await checkStock(name).catch(() => Infinity);   // no record: do not block
     return cart.qty(name) < left;
   }
-  document.querySelectorAll('.add').forEach((btn, i) => {
-    btn.addEventListener('click', async () => {
-      if (!(await canAdd(catalog[i].name))) { showToast('لا يوجد مخزون كاف: ' + catalog[i].name); return; }
-      cart.add(catalog[i].name, catalog[i].price.amount);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      render();
-      showToast('اضيف: ' + catalog[i].name);
-      btn.textContent = 'في السلة: ' + cart.qty(catalog[i].name);
-    });
+  const buttons = [...document.querySelectorAll('.add')];
+  function showQty(btn, name) {
+    const num = document.createElement('b');
+    num.textContent = cart.qty(name);
+    btn.replaceChildren('في السلة: ', num);
+  }
+  document.querySelector('.grid').addEventListener('click', async e => {   // one listener for every card
+    const btn = e.target.closest('.add');
+    if (!btn) return;
+    const { name, price } = catalog[buttons.indexOf(btn)];
+    if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
+    cart.add(name, price.amount);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    render();
+    showToast('اضيف: ' + name);
+    showQty(btn, name);
   });
 
   const menuBtn = document.querySelector('.menu-btn'), menu = document.getElementById('menu');
