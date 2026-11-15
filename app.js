@@ -1,21 +1,28 @@
 (function () {
-  let count = 0;
-  let sum = 0;
   const countEl = document.querySelector('#count');
   const totalEl = document.querySelector('#total');
-  document.querySelectorAll('.add').forEach(btn => {
-    btn.addEventListener('click', () => {
-      count += 1;
-      countEl.textContent = count;
+  const cart = {
+    count: 0,
+    sum: 0,
+    add(e) {
+      const btn = e.currentTarget;
       const price = btn.closest('.card').querySelector('.price').textContent;
-      sum += Number(price.replace(/[^0-9]/g, ''));
-      totalEl.textContent = discount(sum).toLocaleString('en-US');
+      this.count += 1;
+      this.sum += Number(price.replace(/[^0-9]/g, ''));
+      this.render();
       btn.textContent = 'تمت الاضافة';
-    });
+    },
+    total() {
+      return this.sum >= 10000 ? this.sum * 0.9 : this.sum;
+    },
+    render() {
+      countEl.textContent = this.count;
+      totalEl.textContent = this.total().toLocaleString('en-US');
+    },
+  };
+  document.querySelectorAll('.add').forEach(btn => {
+    btn.addEventListener('click', cart.add.bind(cart));
   });
-  function discount(sum) {
-    return sum >= 10000 ? sum * 0.9 : sum;
-  }
 
   const menuBtn = document.querySelector('.menu-btn'), menu = document.getElementById('menu');
   menuBtn.addEventListener('click', () => {
