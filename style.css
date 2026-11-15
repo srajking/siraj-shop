@@ -84,3 +84,11 @@ input, button { font: inherit; }
   .price, .cart b { color: #000; }
   .footer a[href]::after { content: " (" attr(href) ")"; }
 }
+.price .member { font-size: .8em; font-weight: 400; opacity: .75; }
+.toast { position: fixed; inset-inline: 0; bottom: 16px; margin: 0 auto; width: fit-content; padding: .6em 1.2em; border-radius: 999px;
+  background: #1f2937; color: #fff; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+.price .stock { display: block; margin-top: .2em; font-size: .75em; font-weight: 400; opacity: .8; }
+.cart[role="button"] { cursor: pointer; }
+.mini-cart { position: fixed; inset-inline-end: 16px; top: 64px; z-index: 10; max-width: 320px; padding: .8em 1em; border-radius: 12px;
+  background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }

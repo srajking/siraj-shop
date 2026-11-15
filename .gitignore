@@ -8,3 +8,4 @@ img/*.psd
 config.local.js
 # passwords
 secret.txt
+node_modules/

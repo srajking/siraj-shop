@@ -1,8 +1,16 @@
 # Siraj Shop
 
-A small shop page for the Git book.
+A small shop page for the Git, responsive design and advanced JavaScript books.
 
-Open the shop: `index.html` in any browser.
+## Run it
+
+The shop uses ES modules, so it must be served over http — opening `index.html` by double-click
+is blocked by the browser (CORS on `file://`).
+
+    npm install
+    npm run dev       # development server
+    npm run build     # production files in dist/
+    npm run preview   # serve dist/ locally
 
 Delivery to Baghdad and Basra.
 
