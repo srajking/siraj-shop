@@ -1,4 +1,4 @@
 == app.js  top-level names: 0
 total after bag: 16,650
 after "discount = s => 0" + notebook: 19,350
-cart count after reload: 0
+cart count after reload: 2
