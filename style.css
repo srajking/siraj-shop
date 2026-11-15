@@ -85,3 +85,6 @@ input, button { font: inherit; }
   .footer a[href]::after { content: " (" attr(href) ")"; }
 }
 .price .member { font-size: .8em; font-weight: 400; opacity: .75; }
+.toast { position: fixed; inset-inline: 0; bottom: 16px; margin: 0 auto; width: fit-content; padding: .6em 1.2em; border-radius: 999px;
+  background: #1f2937; color: #fff; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }

@@ -55,11 +55,23 @@
     countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
   }
   render();
+  const toast = document.createElement('p');
+  toast.className = 'toast';
+  toast.setAttribute('role', 'status');
+  document.body.append(toast);
+  let hideTimer;
+  function showToast(text) {
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
   document.querySelectorAll('.add').forEach((btn, i) => {
     btn.addEventListener('click', () => {
       cart.add(catalog[i].name, catalog[i].price.amount);
       localStorage.setItem('cart', JSON.stringify(cart));
       render();
+      showToast('اضيف: ' + catalog[i].name);
       btn.textContent = 'في السلة: ' + cart.qty(catalog[i].name);
     });
   });
