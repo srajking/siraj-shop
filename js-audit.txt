@@ -1,0 +1,11 @@
+== app.js  top-level names: 7
+  count     let       console=yes  window.count=yes
+  sum       let       console=yes  window.sum=no
+  countEl   const     console=yes  window.countEl=no
+  totalEl   const     console=yes  window.totalEl=no
+  discount  function  console=yes  window.discount=yes
+  menuBtn   const     console=yes  window.menuBtn=no
+  menu      const     console=yes  window.menu=yes
+total after bag: 16,650
+after "discount = s => 0" + notebook: 0
+cart count after reload: 0
