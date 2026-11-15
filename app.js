@@ -7,14 +7,19 @@
   class Cart {
     static LIMIT = 10000;
     static RATE = 0.9;
-    #items = [];
-    add(price) { this.#items = [...this.#items, price]; }
-    get count() { return this.#items.length; }
-    get total() { return discount(sumOf(this.#items)); }
-    toJSON() { return { items: this.#items }; }
+    #items = new Map();
+    add(name, price) {
+      const qty = (this.#items.get(name)?.qty ?? 0) + 1;
+      this.#items.set(name, { price, qty });
+    }
+    qty(name) { return this.#items.get(name)?.qty ?? 0; }
+    get count() { return sumOf([...this.#items.values()].map(i => i.qty)); }
+    get total() { return discount(sumOf([...this.#items.values()].map(i => i.price * i.qty))); }
+    toJSON() { return { items: [...this.#items] }; }
     static from(data) {
       const c = new Cart();
-      if (data?.items) c.#items = [...data.items];
+      const ok = Array.isArray(data?.items) && data.items.every(Array.isArray);
+      if (ok) c.#items = new Map(data.items);
       return c;
     }
   }
@@ -45,10 +50,10 @@
   render();
   document.querySelectorAll('.add').forEach((btn, i) => {
     btn.addEventListener('click', () => {
-      cart.add(catalog[i].price.amount);
+      cart.add(catalog[i].name, catalog[i].price.amount);
       localStorage.setItem('cart', JSON.stringify(cart));
       render();
-      btn.textContent = 'تمت الاضافة';
+      btn.textContent = 'في السلة: ' + cart.qty(catalog[i].name);
     });
   });
 
