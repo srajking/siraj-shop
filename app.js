@@ -86,7 +86,11 @@ Promise.allSettled(catalog.map(p => checkStock(p.name)))
   .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
 const search = document.querySelector('.search');
 let searching;                                            // the search whose answer we still want
-search.addEventListener('input', async () => {             // ask the API, then show only what it returned
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+search.addEventListener('input', debounce(async () => {   // wait for a 300 ms pause in typing, then ask the API
   searching?.abort();                                      // a newer letter makes the old search useless
   const ctrl = searching = new AbortController();
   const params = new URLSearchParams({ q: search.value.trim() });
@@ -98,7 +102,7 @@ search.addEventListener('input', async () => {             // ask the API, then 
   } catch (err) {
     if (err.name !== 'AbortError') console.warn(err);
   }
-});
+}, 300));
 const toast = document.createElement('p');
 toast.className = 'toast';
 toast.setAttribute('role', 'status');

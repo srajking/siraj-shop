@@ -1,8 +1,8 @@
-// Siraj Shop API v7 — a small local server for the book. Run: npm run api
+// Siraj Shop API v8 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PORT = Number(process.env.PORT) || 4000;
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -17,7 +17,9 @@ const flaky = new Map();                      // key -> how many times it was ca
 const hits = new Map();                       // client -> recent request times (rate limit)
 const done = new Map();                       // Idempotency-Key -> the answer we already gave
 const SLOW_MS = Number(process.env.SLOW_MS) || 0;  // make every POST to the cart slow
-const JITTER = process.env.SEARCH_JITTER === '1';           // short searches answer slower — a shaky network
+const JITTER = process.env.SEARCH_JITTER === '1';
+const MAX_AGE = process.env.CACHE_MAX_AGE ?? '30';         // seconds a browser may reuse product answers
+const stats = new Map();                      // path -> how many requests reached the server           // short searches answer slower — a shaky network
 const sessions = new Map();                   // login cookie: sid -> user id
 const SECRET = process.env.JWT_SECRET || 'dev-only-secret';
 const TTL = Number(process.env.TOKEN_TTL) || 900;           // seconds
@@ -76,6 +78,13 @@ function send(res, status, data, headers = {}) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), ...headers });
   res.end(res.req.method === 'HEAD' ? undefined : body);
 }
+function cached(req, res, data) {             // ETag + Cache-Control for answers that rarely change
+  const body = JSON.stringify(data);
+  const etag = '"' + createHash('sha1').update(body).digest('base64url').slice(0, 16) + '"';
+  const headers = { ETag: etag, 'Cache-Control': MAX_AGE === 'no-cache' ? 'no-cache' : `max-age=${MAX_AGE}` };
+  if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers); return res.end(); }
+  return send(res, 200, data, headers);
+}
 function allow(res, methods) { send(res, 405, { error: 'method not allowed', allow: methods }, { Allow: methods.join(', ') }); }
 function cartView() {
   const items = [...cart.values()].map(i => ({ ...i, name: products.find(p => p.id === i.id).name, price: products.find(p => p.id === i.id).price }));
@@ -105,6 +114,11 @@ const server = createServer(async (req, res) => {
   const m = req.method;
   if (parts[0] !== 'api') return sendFile(res, url.pathname);
   if (cors(req, res)) return;
+  if (url.pathname === '/api/stats') {                    // how many requests reached the server
+    if (req.method === 'DELETE') { stats.clear(); return send(res, 204); }
+    return send(res, 200, Object.fromEntries(stats));
+  }
+  stats.set(url.pathname + url.search, (stats.get(url.pathname + url.search) || 0) + 1);
   if (url.pathname === '/api/visits') {                    // a cookie that counts visits
     const n = Number(/(?:^|; )visits=(\d+)/.exec(req.headers.cookie || '')?.[1] || 0) + 1;
     return send(res, 200, { visits: n, cookieSent: Boolean(req.headers.cookie) }, { 'Set-Cookie': `visits=${n}; Path=/; SameSite=Lax` });
@@ -167,7 +181,7 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 7,
+    name: 'Siraj Shop API', version: 8,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
@@ -183,7 +197,8 @@ const server = createServer(async (req, res) => {
     if (q.get('q')) list = list.filter(p => p.name.includes(q.get('q').trim()));
     if (q.get('category')) list = list.filter(p => p.category === q.get('category'));
     if (sort) list = [...list].sort(SORTS[sort]);
-    return send(res, 200, list, { 'X-Total-Count': String(list.length) });
+    res.setHeader('X-Total-Count', String(list.length));
+    return cached(req, res, list);
   }
   if (route === 'products/:id/reviews') {
     const product = products.find(p => p.id === id);
@@ -199,7 +214,7 @@ const server = createServer(async (req, res) => {
   if (route === 'products/:id') {
     if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
     const item = products.find(p => p.id === id);
-    return item ? send(res, 200, item) : send(res, 404, { error: 'product not found', id: parts[2] });
+    return item ? cached(req, res, item) : send(res, 404, { error: 'product not found', id: parts[2] });
   }
   if (route === 'cart') {
     if (m === 'GET' || m === 'HEAD') return send(res, 200, cartView());
@@ -241,4 +256,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v7: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v8: http://localhost:${PORT}/api/products`));
