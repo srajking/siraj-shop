@@ -1,4 +1,4 @@
-// Siraj Shop API v2 — a small local server for the book. Run: npm run api
+// Siraj Shop API v3 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -7,6 +7,7 @@ const PORT = Number(process.env.PORT) || 4000;
 const ROOT = new URL('..', import.meta.url).pathname;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg' };
 const products = JSON.parse(await readFile(new URL('./data/products.json', import.meta.url), 'utf8'));
+const reviews = JSON.parse(await readFile(new URL('./data/reviews.json', import.meta.url), 'utf8'));
 const cart = new Map();                       // id -> { id, qty, note }
 
 function send(res, status, data, headers = {}) {
@@ -53,9 +54,33 @@ const server = createServer(async (req, res) => {
   if (route === 'boom') return send(res, 500, { error: 'something broke on the server' });
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
+  if (route === '') return send(res, 200, {                  // a tiny index of this API
+    name: 'Siraj Shop API', version: 3,
+    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
+      'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id'],
+  });
   if (route === 'products') {
     if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
-    return send(res, 200, products, { 'X-Total-Count': String(products.length) });
+    const q = url.searchParams;
+    const SORTS = { price: (a, b) => a.price - b.price, '-price': (a, b) => b.price - a.price, name: (a, b) => a.name.localeCompare(b.name, 'ar') };
+    const sort = q.get('sort');
+    if (sort && !SORTS[sort]) return send(res, 400, { error: 'unknown sort', sort, allowed: Object.keys(SORTS) });
+    let list = products;
+    if (q.get('q')) list = list.filter(p => p.name.includes(q.get('q').trim()));
+    if (q.get('category')) list = list.filter(p => p.category === q.get('category'));
+    if (sort) list = [...list].sort(SORTS[sort]);
+    return send(res, 200, list, { 'X-Total-Count': String(list.length) });
+  }
+  if (route === 'products/:id/reviews') {
+    const product = products.find(p => p.id === id);
+    if (!product) return send(res, 404, { error: 'product not found', id });
+    if (m === 'GET') return send(res, 200, reviews.filter(r => r.productId === id));
+    if (m !== 'POST') return allow(res, ['GET', 'POST']);
+    const body = await readJson(req, res); if (!body) return;
+    if (!Number.isInteger(body.stars) || body.stars < 1 || body.stars > 5) return send(res, 422, { error: 'stars must be 1 to 5', stars: body.stars ?? null });
+    const review = { id: reviews.length + 1, productId: id, stars: body.stars, text: String(body.text ?? '') };
+    reviews.push(review);
+    return send(res, 201, review, { Location: `/api/products/${id}/reviews/${review.id}` });
   }
   if (route === 'products/:id') {
     if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
@@ -97,4 +122,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v2: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v3: http://localhost:${PORT}/api/products`));

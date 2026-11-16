@@ -83,6 +83,14 @@ function badge(i, text) {
 }
 Promise.allSettled(catalog.map(p => checkStock(p.name)))
   .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
+const search = document.querySelector('.search');
+search.addEventListener('input', async () => {             // ask the API, then show only what it returned
+  const params = new URLSearchParams({ q: search.value.trim() });
+  const res = await fetch('/api/products?' + params);
+  if (!res.ok) return;
+  const names = new Set((await res.json()).map(p => p.name));
+  for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h2').textContent);
+});
 const toast = document.createElement('p');
 toast.className = 'toast';
 toast.setAttribute('role', 'status');

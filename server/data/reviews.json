@@ -1,0 +1,5 @@
+[
+  { "id": 1, "productId": 3, "stars": 5, "text": "قوية وواسعة" },
+  { "id": 2, "productId": 3, "stars": 4, "text": "السحاب ممتاز" },
+  { "id": 3, "productId": 1, "stars": 5, "text": "ورق ممتاز" }
+]
