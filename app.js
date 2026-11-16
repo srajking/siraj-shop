@@ -110,6 +110,14 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   const { name, price } = catalog[buttons.indexOf(btn)];
   if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
   const live = (await productsReady.catch(() => [])).find(p => p.name === name);
+  if (live) {                                              // tell the server first
+    const res = await fetch('/api/cart/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: live.id, qty: 1 }),
+    });
+    if (!res.ok) { showToast('لم يضف: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
+  }
   cart.add(name, live?.price ?? price.amount);
   localStorage.setItem('cart', JSON.stringify(cart));
   showToast('اضيف: ' + name);
