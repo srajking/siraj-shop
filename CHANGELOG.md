@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.0.0 — the shop talks to a real API
+
+- Prices, stock and search come from the shop API (`npm run api`), not from the HTML
+- The cart lives on the server: add with POST, a cookie per browser, a timeout and a check after it
+- Search waits for a pause in typing (debounce) and cancels the answer it no longer needs
+- Product answers are cached with ETag; reviews load five at a time with a cursor
+- Receipt download as CSV; the server applies the same discount as the page
+- Live stock badges with Server-Sent Events
+- Reviews show their product, loaded with one GraphQL query
+- Every request goes through js/api.js: one ApiError with a code, and a shape check
+- `npm test`: the API layer is tested with MSW, no server needed
+
 ## 3.0.0 — the shop in modern JavaScript
 
 - Cart: a class with private fields, quantities in a Map, iterable, saved as entries

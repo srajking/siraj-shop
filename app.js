@@ -1,4 +1,5 @@
 import { Cart } from './js/cart.js';
+import { api, ApiError } from './js/api.js';
 const countEl = document.querySelector('#count');
 const totalEl = document.querySelector('#total');
 function deepFreeze(o) {
@@ -22,7 +23,8 @@ memberView(catalog).forEach((p, i) => {
 });
 function loadCart() {
   try {
-    return Cart.from(JSON.parse(localStorage.getItem('cart')));
+    const saved = JSON.parse(localStorage.getItem('cart'), (key, value) => (value?.qty !== undefined ? value.qty : value));   // old format { price, qty } -> qty
+    return Cart.from(saved, name => catalog.find(p => p.name === name)?.price.amount ?? 0);
   } catch (err) {
     console.warn(new Error('saved cart is broken, starting empty', { cause: err }));
     localStorage.removeItem('cart');
@@ -51,12 +53,25 @@ function render() {
   countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
 }
 render();
-const stockServer = { 'دفتر A5': 12, 'حقيبة ظهر': 3 };   // pretend server: no record for the pen
+const productsReady = api.products.list();               // one request, shared by everyone below
+api.cart.get().catch(() => {});                          // get our cart cookie now, not in a reply that may time out
 function checkStock(name) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => (name in stockServer ? resolve(stockServer[name]) : reject(new Error('no stock record: ' + name))), 300);
+  return productsReady.then(list => {
+    const p = list.find(x => x.name === name);
+    if (!p) throw new Error('no stock record: ' + name);
+    return p.stock;
   });
 }
+productsReady.then(list => {                              // show the server prices
+  for (const card of document.querySelectorAll('.card')) {
+    const p = list.find(x => x.name === card.querySelector('h2').textContent);
+    if (!p) continue;
+    card.querySelector('.price bdi').textContent = p.price.toLocaleString('en-US') + ' IQD';
+    card.querySelector('.member').textContent = ' · للاعضاء ' + Math.round(p.price * 0.9).toLocaleString('en-US');
+  }
+  cart.reprice(name => list.find(x => x.name === name)?.price);
+  render();
+}).catch(err => console.warn(new Error('could not load products', { cause: err })));
 function badge(i, text) {
   const tag = document.createElement('small');
   tag.className = 'stock';
@@ -65,6 +80,68 @@ function badge(i, text) {
 }
 Promise.allSettled(catalog.map(p => checkStock(p.name)))
   .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
+const stockStream = api.stockStream();                     // the server tells us when stock changes
+stockStream.addEventListener('stock', async e => {
+  const list = await productsReady;
+  for (const { id, stock } of JSON.parse(e.data).stock) {
+    const p = list.find(x => x.id === id);
+    if (!p) continue;
+    p.stock = stock;                                          // checkStock() reads this list
+    const i = catalog.findIndex(c => c.name === p.name);
+    const tag = document.querySelectorAll('.card .price')[i]?.querySelector('.stock');
+    if (tag) tag.textContent = 'متوفر: ' + stock;
+  }
+});
+const search = document.querySelector('.search');
+let searching;                                            // the search whose answer we still want
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+search.addEventListener('input', debounce(async () => {   // wait for a 300 ms pause in typing, then ask the API
+  searching?.abort();                                      // a newer letter makes the old search useless
+  const ctrl = searching = new AbortController();
+  try {
+    const names = new Set((await api.products.list({ q: search.value.trim() }, { signal: ctrl.signal })).map(p => p.name));
+    for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h2').textContent);
+  } catch (err) {
+    if (err.name !== 'AbortError') console.warn(err);
+  }
+}, 300));
+const REVIEWS = `query Reviews($after: String) {
+  reviewSummary { count avg }
+  reviews(limit: 5, after: $after) { items { stars text product { name } } next }
+}`;
+const reviewList = document.querySelector('#review-list'), moreReviews = document.querySelector('#more-reviews');
+let reviewsAfter = '';                                    // the server's cursor: '' = first page, null = the end
+async function loadReviews() {
+  moreReviews.disabled = true;                            // one page at a time
+  try {
+    const { reviews, reviewSummary: s } = await api.graphql(REVIEWS, { after: reviewsAfter || null });
+    for (const r of reviews.items) {
+      const li = document.createElement('li');
+      li.textContent = '★'.repeat(r.stars) + ' ' + r.text + ' — ' + r.product.name;   // written by customers: never innerHTML
+      reviewList.append(li);
+    }
+    document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`;
+    reviewsAfter = reviews.next;
+  } catch (err) {
+    console.warn(err);
+  }
+  moreReviews.disabled = false;
+  moreReviews.hidden = reviewsAfter === null;
+}
+moreReviews.addEventListener('click', loadReviews);
+loadReviews();
+document.querySelector('#receipt').addEventListener('click', async () => {   // the server's receipt as a file
+  const file = await api.cart.receipt().catch(err => { showToast('لا توجد فاتورة: ' + err.message); });
+  if (!file) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file.blob);
+  a.download = file.name ?? 'receipt.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 const toast = document.createElement('p');
 toast.className = 'toast';
 toast.setAttribute('role', 'status');
@@ -91,7 +168,20 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   if (!btn) return;
   const { name, price } = catalog[buttons.indexOf(btn)];
   if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
-  cart.add(name, price.amount);
+  const live = (await productsReady.catch(() => [])).find(p => p.name === name);
+  if (live) {                                              // tell the server first
+    showToast('جار الاضافة…');
+    try {
+      await api.cart.add(live.id, 1);                        // 3 s timeout inside the layer
+    } catch (err) {
+      if (!(err instanceof ApiError)) throw err;
+      if (err.code === 'NETWORK') { showToast('لا يوجد اتصال بالخادم'); return; }
+      if (err.code !== 'TIMEOUT') { showToast('لم يضف: ' + err.message); return; }
+      const now = await api.cart.get().catch(() => null);  // timed out: did it arrive anyway?
+      if (!(now?.items.find(i => i.id === live.id)?.qty > cart.qty(name))) { showToast('الشبكة بطيئة — حاول مرة ثانية'); return; }
+    }
+  }
+  cart.add(name, live?.price ?? price.amount);
   localStorage.setItem('cart', JSON.stringify(cart));
   showToast('اضيف: ' + name);
   showQty(btn, name);

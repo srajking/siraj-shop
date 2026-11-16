@@ -9,6 +9,7 @@ export class Cart {
     const qty = (this.#items.get(name)?.qty ?? 0) + 1;
     this.#items.set(name, { price, qty });
   }
+  reprice(priceOf) { for (const [name, i] of this.#items) i.price = priceOf(name) ?? i.price; }
   qty(name) { return this.#items.get(name)?.qty ?? 0; }
   *[Symbol.iterator]() { yield* this.#items; }
   summary() {
@@ -17,11 +18,11 @@ export class Cart {
     const total = discount(sumOf(items.map(i => i.price * i.qty)));
     return { count, total };
   }
-  toJSON() { return { items: [...this.#items] }; }
-  static from(data) {
+  toJSON() { return { v: 2, items: [...this.#items].map(([name, i]) => [name, i.qty]) }; }   // no prices: they come from the catalog
+  static from(data, priceOf = () => 0) {
     const c = new Cart();
     const ok = Array.isArray(data?.items) && data.items.every(Array.isArray);
-    if (ok) c.#items = new Map(data.items);
+    if (ok) for (const [name, qty] of data.items) c.#items.set(name, { price: priceOf(name), qty });
     return c;
   }
 }
