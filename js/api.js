@@ -1,5 +1,5 @@
 // every request to the shop API goes through this file
-const BASE = import.meta.env?.VITE_API_BASE ?? '/api';   // Vite fills it in; served by the API server it stays /api
+const BASE = import.meta.env?.VITE_API_BASE ?? (globalThis.location ? '/api' : 'http://localhost:4000/api');   // Vite, the page, or Node (tests)
 export class ApiError extends Error {
   name = 'ApiError';
   constructor(code, message, { status = 0, details = null } = {}) { super(message); Object.assign(this, { code, status, details }); }
@@ -17,7 +17,7 @@ export async function request(path, { method = 'GET', body, timeout = 5000, sign
   } catch (err) {
     if (err.name === 'AbortError') throw err;                          // the page cancelled it (a newer search)
     if (err.name === 'TimeoutError') throw new ApiError('TIMEOUT', `no answer in ${timeout} ms`);
-    throw new ApiError('NETWORK', 'cannot reach the server');
+    throw new ApiError('NETWORK', 'cannot reach the server', { details: err.cause?.message ?? err.message });   // keep the real reason
   }
   if (!res.ok) {
     const data = await res.json().catch(() => null);
