@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- README: start the API (`npm run api`) before the page; how to run the tests
+
 ## 4.0.0 — the shop talks to a real API
 
 - Prices, stock and search come from the shop API (`npm run api`), not from the HTML
