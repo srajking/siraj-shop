@@ -1,8 +1,9 @@
-// Siraj Shop API v10 — a small local server for the book. Run: npm run api
+// Siraj Shop API v11 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { EventEmitter } from 'node:events';
 
 const PORT = Number(process.env.PORT) || 4000;
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -23,6 +24,18 @@ const stats = new Map();                      // path -> how many requests reach
 const MAX_UPLOAD = Number(process.env.MAX_UPLOAD) || 2 * 1024 * 1024;   // bytes per request
 const IMAGES = ['image/png', 'image/jpeg', 'image/webp'];
 const uploads = new Map();                    // id -> { filename, type, data }
+const bus = new EventEmitter(); bus.setMaxListeners(0);   // stock changes, for everyone who listens
+let stockState = { version: 1, at: Date.now() };
+const LONGPOLL_MS = Number(process.env.LONGPOLL_MS) || 25000;   // how long a long poll may wait
+const SSE_RETRY = Number(process.env.SSE_RETRY) || 2000;       // ms before EventSource reconnects
+const live = { sse: 0 };
+const streams = new Set();                    // open SSE answers
+const stockNow = () => ({ version: stockState.version, at: stockState.at, stock: products.map(p => ({ id: p.id, stock: p.stock })) });
+function changeStock(p, stock) {
+  p.stock = stock;
+  stockState = { version: stockState.version + 1, at: Date.now() };
+  bus.emit('stock', stockNow());
+}
 const PAGE_DELAY = Number(process.env.PAGE_DELAY) || 0;     // make every page of reviews slow
 const cursorOf = id => Buffer.from('id:' + id).toString('base64url');     // opaque to the client
 const idOf = c => Number(/^id:(\d+)$/.exec(Buffer.from(String(c), 'base64url').toString())?.[1]);
@@ -210,8 +223,8 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 10,
-    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)',
+    name: 'Siraj Shop API', version: 11,
+    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)', 'GET /api/stock', 'GET /api/stock/changes?since= (long poll)', 'GET /api/stock/stream (SSE)', 'WS /api/live', 'PATCH /api/admin/stock/:id (X-API-Key)',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
   if (route === 'products') {
@@ -228,6 +241,43 @@ const server = createServer(async (req, res) => {
     if (sort) list = [...list].sort(SORTS[sort]);
     res.setHeader('X-Total-Count', String(list.length));
     return cached(req, res, list);
+  }
+  if (route === 'connections') return send(res, 200, { sse: live.sse, ws: sockets.size });
+  if (route === 'stock') return cached(req, res, stockNow());
+  if (route === 'stock/changes') {              // long poll: answer now if newer, else wait for a change
+    const since = Number(url.searchParams.get('since')) || 0;
+    if (stockState.version > since) return send(res, 200, stockNow());
+    const done = s => { clearTimeout(timer); bus.off('stock', done); if (!res.writableEnded) send(res, 200, s); };
+    const timer = setTimeout(() => { bus.off('stock', done); send(res, 204); }, LONGPOLL_MS);
+    bus.on('stock', done);
+    req.on('close', () => { clearTimeout(timer); bus.off('stock', done); });
+    return;
+  }
+  if (route === 'stock/stream') {               // Server-Sent Events: one long answer, many messages
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    const last = Number(req.headers['last-event-id']) || null;
+    res.write(`retry: ${SSE_RETRY}\n\n`);
+    const push = (s, extra = {}) => res.write(`id: ${s.version}\nevent: stock\ndata: ${JSON.stringify({ ...s, ...extra })}\n\n`);
+    if (!last || last < stockState.version) push(stockNow(), { lastEventId: last });   // new, or missed something
+    const beat = setInterval(() => res.write(': still here\n\n'), 15000);
+    bus.on('stock', push); live.sse++; streams.add(res);
+    req.on('close', () => { bus.off('stock', push); clearInterval(beat); live.sse--; streams.delete(res); });
+    return;
+  }
+  if (route === 'admin/drop') {                 // cut every SSE connection, like a network drop
+    if (req.headers['x-api-key'] !== API_KEY) return send(res, 401, { error: 'missing or wrong X-API-Key' });
+    const n = streams.size; for (const r of streams) r.destroy();
+    return send(res, 200, { dropped: n });
+  }
+  if (route === 'admin/stock/:id') {            // change the stock of one product
+    if (req.headers['x-api-key'] !== API_KEY) return send(res, 401, { error: 'missing or wrong X-API-Key' });
+    if (m !== 'PATCH') return allow(res, ['PATCH']);
+    const p = products.find(x => x.id === id);
+    if (!p) return send(res, 404, { error: 'product not found', id });
+    const body = await readJson(req, res); if (!body) return;
+    if (!Number.isInteger(body.stock) || body.stock < 0) return send(res, 422, { error: 'stock must be a whole number from 0' });
+    changeStock(p, body.stock);
+    return send(res, 200, { id, stock: p.stock, version: stockState.version });
   }
   if (route === 'uploads') {                    // FormData with one or more "file" fields
     if (m !== 'POST') return allow(res, ['POST']);
@@ -346,4 +396,51 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v10: http://localhost:${PORT}/api/products`));
+// WebSocket on /api/live: both sides may send at any time
+const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+const sockets = new Set();                    // { socket, watching }
+function wsSend(client, msg) {
+  if (client.socket.destroyed) return;
+  const data = Buffer.from(JSON.stringify(msg));
+  const head = data.length < 126 ? Buffer.from([0x81, data.length]) : Buffer.from([0x81, 126, data.length >> 8, data.length & 255]);
+  client.socket.write(Buffer.concat([head, data]));
+}
+function viewers(id) {
+  if (id == null) return;
+  const watching = [...sockets].filter(c => c.watching === id);
+  for (const c of watching) wsSend(c, { type: 'viewers', id, count: watching.length });
+}
+function onMessage(client, text) {
+  let msg;
+  try { msg = JSON.parse(text); } catch { return wsSend(client, { type: 'error', error: 'send JSON', got: text }); }
+  if (msg.type === 'ping') return wsSend(client, { type: 'pong', t: msg.t });
+  if (msg.type === 'watch') { const old = client.watching; client.watching = msg.id; viewers(old); return viewers(msg.id); }
+  wsSend(client, { type: 'error', error: 'unknown type', got: msg.type ?? null });
+}
+bus.on('stock', s => { for (const c of sockets) wsSend(c, { type: 'stock', ...s }); });
+server.on('upgrade', (req, socket) => {
+  if (new URL(req.url, 'http://x').pathname !== '/api/live' || req.headers.upgrade?.toLowerCase() !== 'websocket') return socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+  const accept = createHash('sha1').update(req.headers['sec-websocket-key'] + GUID).digest('base64');
+  socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+  const client = { socket, watching: null };
+  sockets.add(client);
+  wsSend(client, { type: 'hello', clients: sockets.size });
+  let buf = Buffer.alloc(0);
+  socket.on('data', chunk => {                // frames from the browser are masked
+    buf = Buffer.concat([buf, chunk]);
+    while (buf.length >= 2) {
+      const op = buf[0] & 15;
+      let len = buf[1] & 127, off = 2;
+      if (len === 126) { if (buf.length < 4) return; len = buf.readUInt16BE(2); off = 4; } else if (len === 127) return socket.destroy();
+      if (buf.length < off + 4 + len) return;
+      const mask = buf.subarray(off, off + 4), data = Buffer.from(buf.subarray(off + 4, off + 4 + len)).map((b, i) => b ^ mask[i % 4]);
+      buf = buf.subarray(off + 4 + len);
+      if (op === 8) return socket.end(Buffer.from([0x88, 0]));
+      if (op === 1) onMessage(client, data.toString());
+    }
+  });
+  const bye = () => { if (sockets.delete(client)) viewers(client.watching); };
+  socket.on('close', bye); socket.on('error', bye);
+});
+
+server.listen(PORT, () => console.info(`Siraj Shop API v11: http://localhost:${PORT}/api/products`));

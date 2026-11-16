@@ -84,6 +84,18 @@ function badge(i, text) {
 }
 Promise.allSettled(catalog.map(p => checkStock(p.name)))
   .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
+const stockStream = new EventSource('/api/stock/stream');   // the server tells us when stock changes
+stockStream.addEventListener('stock', async e => {
+  const list = await productsReady;
+  for (const { id, stock } of JSON.parse(e.data).stock) {
+    const p = list.find(x => x.id === id);
+    if (!p) continue;
+    p.stock = stock;                                          // checkStock() reads this list
+    const i = catalog.findIndex(c => c.name === p.name);
+    const tag = document.querySelectorAll('.card .price')[i]?.querySelector('.stock');
+    if (tag) tag.textContent = 'متوفر: ' + stock;
+  }
+});
 const search = document.querySelector('.search');
 let searching;                                            // the search whose answer we still want
 function debounce(fn, ms) {
