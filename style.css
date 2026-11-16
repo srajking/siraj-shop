@@ -92,3 +92,4 @@ input, button { font: inherit; }
 .cart[role="button"] { cursor: pointer; }
 .mini-cart { position: fixed; inset-inline-end: 16px; top: 64px; z-index: 10; max-width: 320px; padding: .8em 1em; border-radius: 12px;
   background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
+.card[hidden] { display: none; }   /* hidden loses to .card { display: grid } */
