@@ -51,6 +51,9 @@ body { margin: 0; font-family: Plex, sans-serif;
 .stars { color: #F59E0B; }
 .newsletter { display: flex; flex-wrap: wrap; gap: 8px; }
 .newsletter input { flex: 1 1 12rem; }
+.newsletter label, .newsletter .hint, .newsletter .err { flex-basis: 100%; margin: 0; }
+.newsletter .err { color: #b91c1c; }
+.newsletter .err:empty { display: none; }
 
 /* forms and touch targets */
 input, button { font: inherit; }

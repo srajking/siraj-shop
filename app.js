@@ -217,3 +217,14 @@ document.addEventListener('keydown', e => {
     menuBtn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); menuBtn.focus();
   }
 });
+
+const news = document.querySelector('.newsletter'), newsEmail = document.querySelector('#news-email'), newsErr = document.querySelector('#news-err');
+news.addEventListener('submit', e => {
+  e.preventDefault();                                       // stay on the page: no reload, nothing typed is lost
+  const ok = newsEmail.value.trim() !== '' && newsEmail.checkValidity();
+  newsEmail.setAttribute('aria-invalid', String(!ok));      // the reader hears "invalid" on the field itself
+  newsErr.textContent = ok ? '' : 'Enter an email like name@example.com';
+  if (!ok) { newsEmail.focus(); return; }
+  newsEmail.value = '';
+  document.querySelector('#news-hint').textContent = 'Thanks! Check your inbox.';
+});

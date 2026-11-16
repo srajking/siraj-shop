@@ -66,7 +66,13 @@
   </main>
   <footer class="footer">
     <p lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></p>
-    <form class="newsletter" lang="en" dir="ltr"><input type="email" autocomplete="email" aria-label="بريدك" placeholder="Your email"><button>Subscribe</button></form>
+    <form class="newsletter" lang="en" dir="ltr" novalidate>
+      <label for="news-email">Your email</label>
+      <input id="news-email" name="email" type="email" autocomplete="email" required aria-describedby="news-hint news-err">
+      <button>Subscribe</button>
+      <p id="news-hint" class="hint">One email a month. No spam.</p>
+      <p id="news-err" class="err"></p>
+    </form>
   </footer>
   <script type="module" src="app.js"></script>
 </body>
