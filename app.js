@@ -159,9 +159,10 @@ async function canAdd(name) {
 }
 const buttons = [...document.querySelectorAll('.add')];
 function showQty(btn, name) {
-  const num = document.createElement('b');
+  const num = document.createElement('b'), who = document.createElement('span');
   num.textContent = cart.qty(name);
-  btn.replaceChildren('في السلة: ', num);
+  who.className = 'vh'; who.textContent = name + ' — ';     // heard, not seen: which product this is
+  btn.replaceChildren(who, 'في السلة: ', num);
 }
 document.querySelector('.grid').addEventListener('click', async e => {   // one listener for every card
   const btn = e.target.closest('.add');
@@ -192,6 +193,7 @@ function openMiniCart() {
   const box = document.createElement('div');
   box.className = 'mini-cart';
   box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'السلة');
   box.textContent = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ') || 'السلة فارغة';
   document.body.append(box);
   const ctrl = new AbortController();             // one switch for everything this box listens to
