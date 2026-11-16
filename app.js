@@ -1,4 +1,5 @@
 import { Cart } from './js/cart.js';
+import { api, ApiError } from './js/api.js';
 const countEl = document.querySelector('#count');
 const totalEl = document.querySelector('#total');
 function deepFreeze(o) {
@@ -52,13 +53,8 @@ function render() {
   countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
 }
 render();
-async function loadProducts() {
-  const res = await fetch('/api/products');                // same server, so a path is enough
-  if (!res.ok) throw new Error('products: HTTP ' + res.status);
-  return res.json();
-}
-const productsReady = loadProducts();                     // one request, shared by everyone below
-fetch('/api/cart').catch(() => {});                      // get our cart cookie now, not in a reply that may time out
+const productsReady = api.products.list();               // one request, shared by everyone below
+api.cart.get().catch(() => {});                          // get our cart cookie now, not in a reply that may time out
 function checkStock(name) {
   return productsReady.then(list => {
     const p = list.find(x => x.name === name);
@@ -84,7 +80,7 @@ function badge(i, text) {
 }
 Promise.allSettled(catalog.map(p => checkStock(p.name)))
   .then(results => results.forEach((r, i) => badge(i, r.status === 'fulfilled' ? 'متوفر: ' + r.value : 'المخزون غير معروف')));
-const stockStream = new EventSource('/api/stock/stream');   // the server tells us when stock changes
+const stockStream = api.stockStream();                     // the server tells us when stock changes
 stockStream.addEventListener('stock', async e => {
   const list = await productsReady;
   for (const { id, stock } of JSON.parse(e.data).stock) {
@@ -105,22 +101,13 @@ function debounce(fn, ms) {
 search.addEventListener('input', debounce(async () => {   // wait for a 300 ms pause in typing, then ask the API
   searching?.abort();                                      // a newer letter makes the old search useless
   const ctrl = searching = new AbortController();
-  const params = new URLSearchParams({ q: search.value.trim() });
   try {
-    const res = await fetch('/api/products?' + params, { signal: ctrl.signal });
-    if (!res.ok) return;
-    const names = new Set((await res.json()).map(p => p.name));
+    const names = new Set((await api.products.list({ q: search.value.trim() }, { signal: ctrl.signal })).map(p => p.name));
     for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h2').textContent);
   } catch (err) {
     if (err.name !== 'AbortError') console.warn(err);
   }
 }, 300));
-async function gql(query, variables) {                    // one address; errors arrive inside a 200
-  const res = await fetch('/api/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) });
-  const body = await res.json();
-  if (body.errors) throw new Error('graphql: ' + body.errors.map(e => e.message).join(', '));
-  return body.data;
-}
 const REVIEWS = `query Reviews($after: String) {
   reviewSummary { count avg }
   reviews(limit: 5, after: $after) { items { stars text product { name } } next }
@@ -130,7 +117,7 @@ let reviewsAfter = '';                                    // the server's cursor
 async function loadReviews() {
   moreReviews.disabled = true;                            // one page at a time
   try {
-    const { reviews, reviewSummary: s } = await gql(REVIEWS, { after: reviewsAfter || null });
+    const { reviews, reviewSummary: s } = await api.graphql(REVIEWS, { after: reviewsAfter || null });
     for (const r of reviews.items) {
       const li = document.createElement('li');
       li.textContent = '★'.repeat(r.stars) + ' ' + r.text + ' — ' + r.product.name;   // written by customers: never innerHTML
@@ -147,12 +134,11 @@ async function loadReviews() {
 moreReviews.addEventListener('click', loadReviews);
 loadReviews();
 document.querySelector('#receipt').addEventListener('click', async () => {   // the server's receipt as a file
-  const res = await fetch('/api/cart/receipt');
-  if (!res.ok) { showToast('لا توجد فاتورة: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
-  const blob = await res.blob();
+  const file = await api.cart.receipt().catch(err => { showToast('لا توجد فاتورة: ' + err.message); });
+  if (!file) return;
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'receipt.csv';
+  a.href = URL.createObjectURL(file.blob);
+  a.download = file.name ?? 'receipt.csv';
   a.click();
   URL.revokeObjectURL(a.href);
 });
@@ -186,16 +172,12 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   if (live) {                                              // tell the server first
     showToast('جار الاضافة…');
     try {
-      const res = await fetch('/api/cart/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: live.id, qty: 1 }),
-        signal: AbortSignal.timeout(3000),                   // never wait forever
-      });
-      if (!res.ok) { showToast('لم يضف: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
+      await api.cart.add(live.id, 1);                        // 3 s timeout inside the layer
     } catch (err) {
-      if (err.name !== 'TimeoutError') { showToast('لا يوجد اتصال بالخادم'); return; }
-      const now = await fetch('/api/cart').then(r => r.json()).catch(() => null);   // timed out: did it arrive anyway?
+      if (!(err instanceof ApiError)) throw err;
+      if (err.code === 'NETWORK') { showToast('لا يوجد اتصال بالخادم'); return; }
+      if (err.code !== 'TIMEOUT') { showToast('لم يضف: ' + err.message); return; }
+      const now = await api.cart.get().catch(() => null);  // timed out: did it arrive anyway?
       if (!(now?.items.find(i => i.id === live.id)?.qty > cart.qty(name))) { showToast('الشبكة بطيئة — حاول مرة ثانية'); return; }
     }
   }

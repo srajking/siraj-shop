@@ -1,4 +1,4 @@
-// Siraj Shop API v12 — a small local server for the book. Run: npm run api
+// Siraj Shop API v13 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -37,6 +37,8 @@ function changeStock(p, stock) {
   stockState = { version: stockState.version + 1, at: Date.now() };
   bus.emit('stock', stockNow());
 }
+const PRICE_FORMAT = process.env.PRICE_FORMAT || 'number';   // 'object' = { amount, currency }: a backend change to test against
+const priced = p => (PRICE_FORMAT === 'object' ? { ...p, price: { amount: p.price, currency: 'IQD' } } : p);
 const PAGE_DELAY = Number(process.env.PAGE_DELAY) || 0;     // make every page of reviews slow
 const cursorOf = id => Buffer.from('id:' + id).toString('base64url');     // opaque to the client
 const idOf = c => Number(/^id:(\d+)$/.exec(Buffer.from(String(c), 'base64url').toString())?.[1]);
@@ -282,7 +284,7 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 12,
+    name: 'Siraj Shop API', version: 13,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)', 'GET /api/stock', 'GET /api/stock/changes?since= (long poll)', 'GET /api/stock/stream (SSE)', 'WS /api/live', 'POST /api/graphql { query, variables }', 'PATCH /api/admin/stock/:id (X-API-Key)',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
@@ -299,7 +301,7 @@ const server = createServer(async (req, res) => {
     if (q.get('category')) list = list.filter(p => p.category === q.get('category'));
     if (sort) list = [...list].sort(SORTS[sort]);
     res.setHeader('X-Total-Count', String(list.length));
-    return cached(req, res, list);
+    return cached(req, res, list.map(priced));
   }
   if (route === 'graphql') {
     if (m !== 'POST') return allow(res, ['POST']);
@@ -420,7 +422,7 @@ const server = createServer(async (req, res) => {
   if (route === 'products/:id') {
     if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
     const item = products.find(p => p.id === id);
-    return item ? cached(req, res, item) : send(res, 404, { error: 'product not found', id: parts[2] });
+    return item ? cached(req, res, priced(item)) : send(res, 404, { error: 'product not found', id: parts[2] });
   }
   if (route === 'cart') {
     if (m === 'GET' || m === 'HEAD') return send(res, 200, cartView());
@@ -509,4 +511,4 @@ server.on('upgrade', (req, socket) => {
   socket.on('close', bye); socket.on('error', bye);
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v12: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v13: http://localhost:${PORT}/api/products`));
