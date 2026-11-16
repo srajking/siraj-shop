@@ -1,4 +1,4 @@
-// Siraj Shop API v6 — a small local server for the book. Run: npm run api
+// Siraj Shop API v7 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -17,6 +17,7 @@ const flaky = new Map();                      // key -> how many times it was ca
 const hits = new Map();                       // client -> recent request times (rate limit)
 const done = new Map();                       // Idempotency-Key -> the answer we already gave
 const SLOW_MS = Number(process.env.SLOW_MS) || 0;  // make every POST to the cart slow
+const JITTER = process.env.SEARCH_JITTER === '1';           // short searches answer slower — a shaky network
 const sessions = new Map();                   // login cookie: sid -> user id
 const SECRET = process.env.JWT_SECRET || 'dev-only-secret';
 const TTL = Number(process.env.TOKEN_TTL) || 900;           // seconds
@@ -166,7 +167,7 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 6,
+    name: 'Siraj Shop API', version: 7,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
@@ -176,6 +177,8 @@ const server = createServer(async (req, res) => {
     const SORTS = { price: (a, b) => a.price - b.price, '-price': (a, b) => b.price - a.price, name: (a, b) => a.name.localeCompare(b.name, 'ar') };
     const sort = q.get('sort');
     if (sort && !SORTS[sort]) return send(res, 400, { error: 'unknown sort', sort, allowed: Object.keys(SORTS) });
+    const delay = Number(q.get('delay')) || (JITTER && q.has('q') ? Math.max(100, 900 - 300 * q.get('q').length) : 0);
+    if (delay) await sleep(Math.min(delay, 10000));
     let list = products;
     if (q.get('q')) list = list.filter(p => p.name.includes(q.get('q').trim()));
     if (q.get('category')) list = list.filter(p => p.category === q.get('category'));
@@ -238,4 +241,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v6: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v7: http://localhost:${PORT}/api/products`));
