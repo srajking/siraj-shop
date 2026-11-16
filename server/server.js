@@ -1,4 +1,4 @@
-// Siraj Shop API v3 — a small local server for the book. Run: npm run api
+// Siraj Shop API v4 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -8,7 +8,25 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg' };
 const products = JSON.parse(await readFile(new URL('./data/products.json', import.meta.url), 'utf8'));
 const reviews = JSON.parse(await readFile(new URL('./data/reviews.json', import.meta.url), 'utf8'));
-const cart = new Map();                       // id -> { id, qty, note }
+const cart = new Map();
+const ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5500').split(',');
+function cors(req, res) {                                   // which other sites may read our answers
+  const origin = req.headers.origin;
+  if (origin && ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, Location');
+  }
+  res.setHeader('Vary', 'Origin');
+  if (req.method === 'OPTIONS' && req.headers['access-control-request-method']) {   // preflight
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '600');
+    res.writeHead(204); res.end();
+    return true;
+  }
+  return false;
+}                       // id -> { id, qty, note }
 
 function send(res, status, data, headers = {}) {
   if (status === 204) { res.writeHead(204, headers); return res.end(); }
@@ -44,6 +62,11 @@ const server = createServer(async (req, res) => {
   const parts = url.pathname.split('/').filter(Boolean);
   const m = req.method;
   if (parts[0] !== 'api') return sendFile(res, url.pathname);
+  if (cors(req, res)) return;
+  if (url.pathname === '/api/visits') {                    // a cookie that counts visits
+    const n = Number(/(?:^|; )visits=(\d+)/.exec(req.headers.cookie || '')?.[1] || 0) + 1;
+    return send(res, 200, { visits: n, cookieSent: Boolean(req.headers.cookie) }, { 'Set-Cookie': `visits=${n}; Path=/; SameSite=Lax` });
+  }
   const route = parts.slice(1).map(p => (/^\d+$/.test(p) ? ':id' : p)).join('/');
   const id = Number(parts.find(p => /^\d+$/.test(p)));
 
@@ -55,7 +78,7 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 3,
+    name: 'Siraj Shop API', version: 4,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id'],
   });
@@ -122,4 +145,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v3: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v4: http://localhost:${PORT}/api/products`));
