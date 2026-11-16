@@ -1,14 +1,50 @@
-// Siraj Shop API v4 — a small local server for the book. Run: npm run api
+// Siraj Shop API v5 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PORT = Number(process.env.PORT) || 4000;
 const ROOT = new URL('..', import.meta.url).pathname;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg' };
 const products = JSON.parse(await readFile(new URL('./data/products.json', import.meta.url), 'utf8'));
 const reviews = JSON.parse(await readFile(new URL('./data/reviews.json', import.meta.url), 'utf8'));
-const cart = new Map();
+const users = JSON.parse(await readFile(new URL('./data/users.json', import.meta.url), 'utf8'));
+const carts = new Map();                      // one cart per browser: sid cookie -> Map
+let cart;
+const sessions = new Map();                   // login cookie: sid -> user id
+const SECRET = process.env.JWT_SECRET || 'dev-only-secret';
+const TTL = Number(process.env.TOKEN_TTL) || 900;           // seconds
+const API_KEY = process.env.API_KEY || 'key-dev-123';
+const b64 = x => Buffer.from(JSON.stringify(x)).toString('base64url');
+function sign(user) {
+  const head = b64({ alg: 'HS256', typ: 'JWT' });
+  const body = b64({ sub: user.id, name: user.name, role: user.role, exp: Math.floor(Date.now() / 1000) + TTL });
+  return `${head}.${body}.${createHmac('sha256', SECRET).update(`${head}.${body}`).digest('base64url')}`;
+}
+function verify(token) {
+  const [head, body, sig] = String(token).split('.');
+  if (!sig) return { error: 'malformed token' };
+  const good = createHmac('sha256', SECRET).update(`${head}.${body}`).digest();
+  const got = Buffer.from(sig, 'base64url');
+  if (got.length !== good.length || !timingSafeEqual(got, good)) return { error: 'bad signature' };
+  const claims = JSON.parse(Buffer.from(body, 'base64url').toString());
+  if (claims.exp < Date.now() / 1000) return { error: 'token expired' };
+  return { user: users.find(u => u.id === claims.sub) };
+}
+const cookies = req => Object.fromEntries((req.headers.cookie || '').split(/;\s*/).filter(Boolean).map(c => c.split('=')));
+function whoIs(req) {                          // Bearer token first, then the login cookie
+  const auth = req.headers.authorization || '';
+  if (auth) return auth.startsWith('Bearer ') ? verify(auth.slice(7)) : { error: 'use: Authorization: Bearer <token>' };
+  const uid = sessions.get(cookies(req).session);
+  return uid ? { user: users.find(u => u.id === uid) } : { error: 'login required' };
+}
+function unauthorized(res, error) { send(res, 401, { error }, { 'WWW-Authenticate': 'Bearer' }); }
+function cartOf(req, res) {
+  let sid = cookies(req).cart;
+  if (!sid || !carts.has(sid)) { sid = randomUUID(); carts.set(sid, new Map()); res.setHeader('Set-Cookie', `cart=${sid}; Path=/; HttpOnly; SameSite=Lax`); }
+  return carts.get(sid);
+}
 const ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5500').split(',');
 function cors(req, res) {                                   // which other sites may read our answers
   const origin = req.headers.origin;
@@ -20,7 +56,7 @@ function cors(req, res) {                                   // which other sites
   res.setHeader('Vary', 'Origin');
   if (req.method === 'OPTIONS' && req.headers['access-control-request-method']) {   // preflight
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
     res.setHeader('Access-Control-Max-Age', '600');
     res.writeHead(204); res.end();
     return true;
@@ -70,6 +106,38 @@ const server = createServer(async (req, res) => {
   const route = parts.slice(1).map(p => (/^\d+$/.test(p) ? ':id' : p)).join('/');
   const id = Number(parts.find(p => /^\d+$/.test(p)));
 
+  if (route.startsWith('cart') || route === 'orders') cart = cartOf(req, res);
+  if (route === 'login') {
+    if (m !== 'POST') return allow(res, ['POST']);
+    const body = await readJson(req, res); if (!body) return;
+    const user = users.find(u => u.username === body.username && u.password === body.password);
+    if (!user) return send(res, 401, { error: 'wrong username or password' });
+    const sid = randomUUID(); sessions.set(sid, user.id);
+    return send(res, 200, { token: sign(user), expiresIn: TTL, user: { id: user.id, name: user.name, role: user.role } },
+      { 'Set-Cookie': `session=${sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${TTL}` });
+  }
+  if (route === 'logout') { sessions.delete(cookies(req).session); return send(res, 204, null, { 'Set-Cookie': 'session=; Path=/; Max-Age=0' }); }
+  if (route === 'me') {
+    const who = whoIs(req);
+    return who.user ? send(res, 200, { id: who.user.id, name: who.user.name, role: who.user.role }) : unauthorized(res, who.error);
+  }
+  if (route === 'admin/stock') {                // for servers and scripts: an API key, not a login
+    const key = req.headers['x-api-key'];
+    if (!key) return send(res, 401, { error: 'missing X-API-Key' });
+    if (key !== API_KEY) return send(res, 403, { error: 'this key is not allowed' });
+    return send(res, 200, products.map(p => ({ id: p.id, stock: p.stock })));
+  }
+  if (route === 'orders') {
+    const who = whoIs(req);
+    if (!who.user) return unauthorized(res, who.error);
+    if (m === 'GET' && who.user.role !== 'admin') return send(res, 403, { error: 'admins only', role: who.user.role });
+    if (m === 'GET') return send(res, 200, []);
+    if (m !== 'POST') return allow(res, ['GET', 'POST']);
+    const view = cartView();
+    if (!view.count) return send(res, 409, { error: 'cart is empty' });
+    cart.clear();
+    return send(res, 201, { id: Date.now() % 100000, user: who.user.name, ...view }, {});
+  }
   if (route === 'echo') {                     // shows what the server received
     let raw = ''; for await (const chunk of req) raw += chunk;
     return send(res, 200, { method: m, path: url.pathname, query: Object.fromEntries(url.searchParams), headers: req.headers, body: raw });
@@ -78,9 +146,9 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 4,
+    name: 'Siraj Shop API', version: 5,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
-      'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id'],
+      'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
   if (route === 'products') {
     if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
@@ -145,4 +213,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v4: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v5: http://localhost:${PORT}/api/products`));
