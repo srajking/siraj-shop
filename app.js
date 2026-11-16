@@ -58,6 +58,7 @@ async function loadProducts() {
   return res.json();
 }
 const productsReady = loadProducts();                     // one request, shared by everyone below
+fetch('/api/cart').catch(() => {});                      // get our cart cookie now, not in a reply that may time out
 function checkStock(name) {
   return productsReady.then(list => {
     const p = list.find(x => x.name === name);
