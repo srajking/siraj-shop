@@ -119,12 +119,20 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
   const live = (await productsReady.catch(() => [])).find(p => p.name === name);
   if (live) {                                              // tell the server first
-    const res = await fetch('/api/cart/items', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: live.id, qty: 1 }),
-    });
-    if (!res.ok) { showToast('لم يضف: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
+    showToast('جار الاضافة…');
+    try {
+      const res = await fetch('/api/cart/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: live.id, qty: 1 }),
+        signal: AbortSignal.timeout(3000),                   // never wait forever
+      });
+      if (!res.ok) { showToast('لم يضف: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
+    } catch (err) {
+      if (err.name !== 'TimeoutError') { showToast('لا يوجد اتصال بالخادم'); return; }
+      const now = await fetch('/api/cart').then(r => r.json()).catch(() => null);   // timed out: did it arrive anyway?
+      if (!(now?.items.find(i => i.id === live.id)?.qty > cart.qty(name))) { showToast('الشبكة بطيئة — حاول مرة ثانية'); return; }
+    }
   }
   cart.add(name, live?.price ?? price.amount);
   localStorage.setItem('cart', JSON.stringify(cart));

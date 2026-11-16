@@ -1,4 +1,4 @@
-// Siraj Shop API v5 — a small local server for the book. Run: npm run api
+// Siraj Shop API v6 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -12,6 +12,11 @@ const reviews = JSON.parse(await readFile(new URL('./data/reviews.json', import.
 const users = JSON.parse(await readFile(new URL('./data/users.json', import.meta.url), 'utf8'));
 const carts = new Map();                      // one cart per browser: sid cookie -> Map
 let cart;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const flaky = new Map();                      // key -> how many times it was called
+const hits = new Map();                       // client -> recent request times (rate limit)
+const done = new Map();                       // Idempotency-Key -> the answer we already gave
+const SLOW_MS = Number(process.env.SLOW_MS) || 0;  // make every POST to the cart slow
 const sessions = new Map();                   // login cookie: sid -> user id
 const SECRET = process.env.JWT_SECRET || 'dev-only-secret';
 const TTL = Number(process.env.TOKEN_TTL) || 900;           // seconds
@@ -56,7 +61,7 @@ function cors(req, res) {                                   // which other sites
   res.setHeader('Vary', 'Origin');
   if (req.method === 'OPTIONS' && req.headers['access-control-request-method']) {   // preflight
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Idempotency-Key');
     res.setHeader('Access-Control-Max-Age', '600');
     res.writeHead(204); res.end();
     return true;
@@ -138,6 +143,21 @@ const server = createServer(async (req, res) => {
     cart.clear();
     return send(res, 201, { id: Date.now() % 100000, user: who.user.name, ...view }, {});
   }
+  if (route === 'slow') {                       // answers after ?ms=
+    await sleep(Math.min(Number(url.searchParams.get('ms')) || 1000, 10000));
+    return send(res, 200, { waited: Number(url.searchParams.get('ms')) || 1000 });
+  }
+  if (route === 'flaky') {                      // fails ?fail= times for each ?key=, then works
+    const key = url.searchParams.get('key') || 'x', n = (flaky.get(key) || 0) + 1; flaky.set(key, n);
+    if (n <= (Number(url.searchParams.get('fail')) || 2)) return send(res, 503, { error: 'try again soon', attempt: n }, { 'Retry-After': '1' });
+    return send(res, 200, { ok: true, attempt: n });
+  }
+  if (route === 'limited') {                    // 3 requests per 10 seconds per client
+    const who = req.headers['x-client'] || req.socket.remoteAddress, now = Date.now();
+    const recent = (hits.get(who) || []).filter(t => now - t < 10000); recent.push(now); hits.set(who, recent);
+    if (recent.length > 3) return send(res, 429, { error: 'too many requests', limit: 3, window: '10s' }, { 'Retry-After': String(Math.ceil((10000 - (now - recent[0])) / 1000)) });
+    return send(res, 200, { ok: true, used: recent.length, limit: 3 });
+  }
   if (route === 'echo') {                     // shows what the server received
     let raw = ''; for await (const chunk of req) raw += chunk;
     return send(res, 200, { method: m, path: url.pathname, query: Object.fromEntries(url.searchParams), headers: req.headers, body: raw });
@@ -146,7 +166,7 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 5,
+    name: 'Siraj Shop API', version: 6,
     endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
@@ -187,6 +207,8 @@ const server = createServer(async (req, res) => {
   if (route === 'cart/items') {
     if (m === 'OPTIONS') return send(res, 204, null, { Allow: 'POST, OPTIONS' });
     if (m !== 'POST') return allow(res, ['POST', 'OPTIONS']);
+    const ikey = req.headers['idempotency-key'];
+    if (ikey && done.has(ikey)) { const [st, data, hd] = done.get(ikey); await sleep(SLOW_MS); return send(res, st, data, { ...hd, 'Idempotent-Replay': 'true' }); }
     const body = await readJson(req, res); if (!body) return;
     const p = products.find(x => x.id === body.id);
     if (!p) return send(res, 404, { error: 'product not found', id: body.id ?? null });
@@ -195,7 +217,10 @@ const server = createServer(async (req, res) => {
     const now = (cart.get(p.id)?.qty || 0) + qty;
     if (now > p.stock) return send(res, 409, { error: 'not enough stock', stock: p.stock, wanted: now });
     cart.set(p.id, { id: p.id, qty: now, note: cart.get(p.id)?.note ?? '' });
-    return send(res, 201, cart.get(p.id), { Location: `/api/cart/items/${p.id}` });
+    const answer = [201, { ...cart.get(p.id) }, { Location: `/api/cart/items/${p.id}` }];
+    if (ikey) done.set(ikey, answer);
+    await sleep(Number(req.headers['x-delay']) || SLOW_MS);     // the work is done — the answer is late
+    return send(res, ...answer);
   }
   if (route === 'cart/items/:id') {
     const item = cart.get(id);
@@ -213,4 +238,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v5: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v6: http://localhost:${PORT}/api/products`));
