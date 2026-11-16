@@ -22,7 +22,8 @@ memberView(catalog).forEach((p, i) => {
 });
 function loadCart() {
   try {
-    return Cart.from(JSON.parse(localStorage.getItem('cart')));
+    const saved = JSON.parse(localStorage.getItem('cart'), (key, value) => (value?.qty !== undefined ? value.qty : value));   // old format { price, qty } -> qty
+    return Cart.from(saved, name => catalog.find(p => p.name === name)?.price.amount ?? 0);
   } catch (err) {
     console.warn(new Error('saved cart is broken, starting empty', { cause: err }));
     localStorage.removeItem('cart');
