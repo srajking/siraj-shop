@@ -128,6 +128,16 @@ loadReviews();
 fetch('/api/reviews/summary').then(r => r.json())
   .then(s => { document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`; })
   .catch(err => console.warn(err));
+document.querySelector('#receipt').addEventListener('click', async () => {   // the server's receipt as a file
+  const res = await fetch('/api/cart/receipt');
+  if (!res.ok) { showToast('لا توجد فاتورة: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? 'receipt.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 const toast = document.createElement('p');
 toast.className = 'toast';
 toast.setAttribute('role', 'status');

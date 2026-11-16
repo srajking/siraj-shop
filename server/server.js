@@ -1,4 +1,4 @@
-// Siraj Shop API v9 — a small local server for the book. Run: npm run api
+// Siraj Shop API v10 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -20,6 +20,9 @@ const SLOW_MS = Number(process.env.SLOW_MS) || 0;  // make every POST to the car
 const JITTER = process.env.SEARCH_JITTER === '1';
 const MAX_AGE = process.env.CACHE_MAX_AGE ?? '30';         // seconds a browser may reuse product answers
 const stats = new Map();                      // path -> how many requests reached the server
+const MAX_UPLOAD = Number(process.env.MAX_UPLOAD) || 2 * 1024 * 1024;   // bytes per request
+const IMAGES = ['image/png', 'image/jpeg', 'image/webp'];
+const uploads = new Map();                    // id -> { filename, type, data }
 const PAGE_DELAY = Number(process.env.PAGE_DELAY) || 0;     // make every page of reviews slow
 const cursorOf = id => Buffer.from('id:' + id).toString('base64url');     // opaque to the client
 const idOf = c => Number(/^id:(\d+)$/.exec(Buffer.from(String(c), 'base64url').toString())?.[1]);
@@ -62,7 +65,7 @@ function cors(req, res) {                                   // which other sites
   if (origin && ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, Location');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, Location, Content-Disposition');
   }
   res.setHeader('Vary', 'Origin');
   if (req.method === 'OPTIONS' && req.headers['access-control-request-method']) {   // preflight
@@ -89,15 +92,38 @@ function cached(req, res, data) {             // ETag + Cache-Control for answer
   return send(res, 200, data, headers);
 }
 function allow(res, methods) { send(res, 405, { error: 'method not allowed', allow: methods }, { Allow: methods.join(', ') }); }
+const DISCOUNT = { LIMIT: 10000, RATE: 0.9 };   // js/cart.js: Cart.LIMIT and Cart.RATE
 function cartView() {
   const items = [...cart.values()].map(i => ({ ...i, name: products.find(p => p.id === i.id).name, price: products.find(p => p.id === i.id).price }));
-  return { items, count: items.reduce((s, i) => s + i.qty, 0), total: items.reduce((s, i) => s + i.qty * i.price, 0) };
+  const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
+  const total = subtotal >= DISCOUNT.LIMIT ? Math.round(subtotal * DISCOUNT.RATE) : subtotal;   // the same rule the page uses
+  return { items, count: items.reduce((s, i) => s + i.qty, 0), subtotal, total };
 }
 async function readJson(req, res) {
   const type = req.headers['content-type'] || '';
   let raw = ''; for await (const chunk of req) raw += chunk;
   if (!type.startsWith('application/json')) { send(res, 415, { error: 'send JSON', got: type || null }); return null; }
   try { return JSON.parse(raw); } catch (err) { send(res, 400, { error: 'body is not valid JSON', detail: err.message }); return null; }
+}
+async function readRaw(req) {                 // the whole body as bytes
+  const chunks = []; for await (const c of req) chunks.push(c);
+  return Buffer.concat(chunks);
+}
+function parseMultipart(buf, type) {          // FormData on the wire: parts between --boundary lines
+  const b = /boundary=(?:"([^"]+)"|([^;]+))/.exec(type);
+  if (!b) return null;
+  const sep = Buffer.from('--' + (b[1] || b[2])), parts = [];
+  let i = buf.indexOf(sep);
+  while (i !== -1) {
+    const start = i + sep.length;
+    if (buf.subarray(start, start + 2).toString() === '--') break;
+    const next = buf.indexOf(sep, start);
+    if (next === -1) break;
+    const part = buf.subarray(start + 2, next - 2), h = part.indexOf('\r\n\r\n'), head = part.subarray(0, h).toString();
+    parts.push({ name: /name="([^"]*)"/.exec(head)?.[1], filename: /filename="([^"]*)"/.exec(head)?.[1], type: /content-type:\s*([^\r\n]+)/i.exec(head)?.[1], data: part.subarray(h + 4) });
+    i = next;
+  }
+  return parts;
 }
 async function sendFile(res, path) {
   const file = normalize(join(ROOT, path === '/' ? 'index.html' : path));
@@ -184,8 +210,8 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 9,
-    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=',
+    name: 'Siraj Shop API', version: 10,
+    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
   if (route === 'products') {
@@ -202,6 +228,38 @@ const server = createServer(async (req, res) => {
     if (sort) list = [...list].sort(SORTS[sort]);
     res.setHeader('X-Total-Count', String(list.length));
     return cached(req, res, list);
+  }
+  if (route === 'uploads') {                    // FormData with one or more "file" fields
+    if (m !== 'POST') return allow(res, ['POST']);
+    const type = req.headers['content-type'] || '';
+    const raw = await readRaw(req);
+    if (!type.startsWith('multipart/form-data')) return send(res, 415, { error: 'send FormData (multipart/form-data)', got: type || null });
+    if (raw.length > MAX_UPLOAD) return send(res, 413, { error: 'too large', max: MAX_UPLOAD, got: raw.length });
+    const parts = parseMultipart(raw, type);
+    if (!parts) return send(res, 400, { error: 'no boundary in Content-Type', got: type });
+    const files = parts.filter(p => p.filename !== undefined);
+    if (!files.length) return send(res, 400, { error: 'no file in the form' });
+    const bad = files.find(f => !IMAGES.includes(f.type));
+    if (bad) return send(res, 415, { error: 'images only', file: bad.filename, type: bad.type, allowed: IMAGES });
+    const saved = files.map(f => {
+      const fid = uploads.size + 1; uploads.set(fid, f);
+      return { id: fid, name: f.filename, type: f.type, size: f.data.length, url: `/api/uploads/${fid}` };
+    });
+    return send(res, 201, { files: saved }, { Location: saved[0].url });
+  }
+  if (route === 'uploads/:id') {
+    const f = uploads.get(id);
+    if (!f) return send(res, 404, { error: 'no such upload', id });
+    res.writeHead(200, { 'Content-Type': f.type, 'Content-Length': f.data.length });
+    return res.end(f.data);
+  }
+  if (route === 'cart/receipt') {               // the cart as a CSV file
+    const v = cartView();
+    if (!v.count) return send(res, 409, { error: 'cart is empty' });
+    const rows = [['product', 'qty', 'price', 'line'], ...v.items.map(i => [i.name, i.qty, i.price, i.qty * i.price]), ['subtotal', v.count, '', v.subtotal], ['total', '', '', v.total]];
+    const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n') + '\r\n';   // BOM: Excel reads it as UTF-8
+    res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="siraj-receipt.csv"', 'Content-Length': Buffer.byteLength(csv) });
+    return res.end(csv);
   }
   if (route === 'reviews/summary') {
     const list = url.searchParams.get('product') ? reviews.filter(r => r.productId === Number(url.searchParams.get('product'))) : reviews;
@@ -288,4 +346,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v9: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v10: http://localhost:${PORT}/api/products`));
