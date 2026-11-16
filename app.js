@@ -103,6 +103,31 @@ search.addEventListener('input', debounce(async () => {   // wait for a 300 ms p
     if (err.name !== 'AbortError') console.warn(err);
   }
 }, 300));
+const reviewList = document.querySelector('#review-list'), moreReviews = document.querySelector('#more-reviews');
+let reviewsAfter = '';                                    // the server's cursor: '' = first page, null = the end
+async function loadReviews() {
+  moreReviews.disabled = true;                            // one page at a time
+  try {
+    const res = await fetch('/api/reviews?limit=5' + (reviewsAfter ? '&after=' + reviewsAfter : ''));
+    if (!res.ok) throw new Error('reviews: HTTP ' + res.status);
+    const { items, next } = await res.json();
+    for (const r of items) {
+      const li = document.createElement('li');
+      li.textContent = '★'.repeat(r.stars) + ' ' + r.text;      // written by customers: never innerHTML
+      reviewList.append(li);
+    }
+    reviewsAfter = next;
+  } catch (err) {
+    console.warn(err);
+  }
+  moreReviews.disabled = false;
+  moreReviews.hidden = reviewsAfter === null;
+}
+moreReviews.addEventListener('click', loadReviews);
+loadReviews();
+fetch('/api/reviews/summary').then(r => r.json())
+  .then(s => { document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`; })
+  .catch(err => console.warn(err));
 const toast = document.createElement('p');
 toast.className = 'toast';
 toast.setAttribute('role', 'status');

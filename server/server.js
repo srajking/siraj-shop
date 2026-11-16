@@ -1,4 +1,4 @@
-// Siraj Shop API v8 — a small local server for the book. Run: npm run api
+// Siraj Shop API v9 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -19,7 +19,10 @@ const done = new Map();                       // Idempotency-Key -> the answer w
 const SLOW_MS = Number(process.env.SLOW_MS) || 0;  // make every POST to the cart slow
 const JITTER = process.env.SEARCH_JITTER === '1';
 const MAX_AGE = process.env.CACHE_MAX_AGE ?? '30';         // seconds a browser may reuse product answers
-const stats = new Map();                      // path -> how many requests reached the server           // short searches answer slower — a shaky network
+const stats = new Map();                      // path -> how many requests reached the server
+const PAGE_DELAY = Number(process.env.PAGE_DELAY) || 0;     // make every page of reviews slow
+const cursorOf = id => Buffer.from('id:' + id).toString('base64url');     // opaque to the client
+const idOf = c => Number(/^id:(\d+)$/.exec(Buffer.from(String(c), 'base64url').toString())?.[1]);
 const sessions = new Map();                   // login cookie: sid -> user id
 const SECRET = process.env.JWT_SECRET || 'dev-only-secret';
 const TTL = Number(process.env.TOKEN_TTL) || 900;           // seconds
@@ -181,8 +184,8 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 8,
-    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews',
+    name: 'Siraj Shop API', version: 9,
+    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
   if (route === 'products') {
@@ -199,6 +202,35 @@ const server = createServer(async (req, res) => {
     if (sort) list = [...list].sort(SORTS[sort]);
     res.setHeader('X-Total-Count', String(list.length));
     return cached(req, res, list);
+  }
+  if (route === 'reviews/summary') {
+    const list = url.searchParams.get('product') ? reviews.filter(r => r.productId === Number(url.searchParams.get('product'))) : reviews;
+    const avg = list.length ? Math.round(10 * list.reduce((s, r) => s + r.stars, 0) / list.length) / 10 : null;
+    return send(res, 200, { count: list.length, avg });
+  }
+  if (route === 'reviews') {                    // newest first, one page at a time
+    if (m !== 'GET' && m !== 'HEAD') return allow(res, ['GET', 'HEAD']);
+    const q = url.searchParams;
+    const limit = q.has('limit') ? Number(q.get('limit')) : 10;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) return send(res, 400, { error: 'limit must be 1 to 50', limit: q.get('limit') });
+    let list = [...reviews].sort((a, b) => b.id - a.id);
+    if (q.get('product')) list = list.filter(r => r.productId === Number(q.get('product')));
+    if (PAGE_DELAY) await sleep(PAGE_DELAY);
+    res.setHeader('X-Total-Count', String(list.length));
+    if (q.has('page')) {                        // offset: skip (page - 1) * limit
+      const page = Number(q.get('page'));
+      if (!Number.isInteger(page) || page < 1) return send(res, 400, { error: 'page starts at 1', page: q.get('page') });
+      return send(res, 200, { items: list.slice((page - 1) * limit, page * limit), page, limit, total: list.length, pages: Math.ceil(list.length / limit) });
+    }
+    let start = 0;                              // cursor: continue after the last one you saw
+    if (q.get('after')) {
+      const last = idOf(q.get('after'));
+      if (!last) return send(res, 400, { error: 'bad cursor', after: q.get('after') });
+      start = list.findIndex(r => r.id < last);
+      if (start < 0) start = list.length;
+    }
+    const items = list.slice(start, start + limit);
+    return send(res, 200, { items, next: start + limit < list.length ? cursorOf(items.at(-1).id) : null });
   }
   if (route === 'products/:id/reviews') {
     const product = products.find(p => p.id === id);
@@ -256,4 +288,4 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'no such endpoint', path: url.pathname });
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v8: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v9: http://localhost:${PORT}/api/products`));
