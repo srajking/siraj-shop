@@ -9,6 +9,7 @@ export class Cart {
     const qty = (this.#items.get(name)?.qty ?? 0) + 1;
     this.#items.set(name, { price, qty });
   }
+  reprice(priceOf) { for (const [name, i] of this.#items) i.price = priceOf(name) ?? i.price; }
   qty(name) { return this.#items.get(name)?.qty ?? 0; }
   *[Symbol.iterator]() { yield* this.#items; }
   summary() {

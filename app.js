@@ -52,12 +52,29 @@ function render() {
   countEl.title = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ');
 }
 render();
-const stockServer = { 'دفتر A5': 12, 'حقيبة ظهر': 3 };   // pretend server: no record for the pen
+async function loadProducts() {
+  const res = await fetch('/api/products');                // same server, so a path is enough
+  if (!res.ok) throw new Error('products: HTTP ' + res.status);
+  return res.json();
+}
+const productsReady = loadProducts();                     // one request, shared by everyone below
 function checkStock(name) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => (name in stockServer ? resolve(stockServer[name]) : reject(new Error('no stock record: ' + name))), 300);
+  return productsReady.then(list => {
+    const p = list.find(x => x.name === name);
+    if (!p) throw new Error('no stock record: ' + name);
+    return p.stock;
   });
 }
+productsReady.then(list => {                              // show the server prices
+  for (const card of document.querySelectorAll('.card')) {
+    const p = list.find(x => x.name === card.querySelector('h2').textContent);
+    if (!p) continue;
+    card.querySelector('.price bdi').textContent = p.price.toLocaleString('en-US') + ' IQD';
+    card.querySelector('.member').textContent = ' · للاعضاء ' + Math.round(p.price * 0.9).toLocaleString('en-US');
+  }
+  cart.reprice(name => list.find(x => x.name === name)?.price);
+  render();
+}).catch(err => console.warn(new Error('could not load products', { cause: err })));
 function badge(i, text) {
   const tag = document.createElement('small');
   tag.className = 'stock';
@@ -92,7 +109,8 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
   if (!btn) return;
   const { name, price } = catalog[buttons.indexOf(btn)];
   if (!(await canAdd(name))) { showToast('لا يوجد مخزون كاف: ' + name); return; }
-  cart.add(name, price.amount);
+  const live = (await productsReady.catch(() => [])).find(p => p.name === name);
+  cart.add(name, live?.price ?? price.amount);
   localStorage.setItem('cart', JSON.stringify(cart));
   showToast('اضيف: ' + name);
   showQty(btn, name);
