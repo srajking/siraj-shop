@@ -7,7 +7,7 @@ function deepFreeze(o) {
   return Object.freeze(o);
 }
 const catalog = deepFreeze([...document.querySelectorAll('.card')].map(card => ({
-  name: card.querySelector('h2').textContent,
+  name: card.querySelector('h3').textContent,
   price: { amount: Number(card.querySelector('.price bdi').textContent.replace(/[^0-9]/g, '')), currency: 'IQD' },
 })));
 function memberView(list) {
@@ -64,7 +64,7 @@ function checkStock(name) {
 }
 productsReady.then(list => {                              // show the server prices
   for (const card of document.querySelectorAll('.card')) {
-    const p = list.find(x => x.name === card.querySelector('h2').textContent);
+    const p = list.find(x => x.name === card.querySelector('h3').textContent);
     if (!p) continue;
     card.querySelector('.price bdi').textContent = p.price.toLocaleString('en-US') + ' IQD';
     card.querySelector('.member').textContent = ' · للاعضاء ' + Math.round(p.price * 0.9).toLocaleString('en-US');
@@ -103,7 +103,7 @@ search.addEventListener('input', debounce(async () => {   // wait for a 300 ms p
   const ctrl = searching = new AbortController();
   try {
     const names = new Set((await api.products.list({ q: search.value.trim() }, { signal: ctrl.signal })).map(p => p.name));
-    for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h2').textContent);
+    for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h3').textContent);
   } catch (err) {
     if (err.name !== 'AbortError') console.warn(err);
   }

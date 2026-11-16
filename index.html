@@ -12,10 +12,13 @@
     <button class="menu-btn" aria-expanded="false" aria-controls="menu">القائمة</button>
     <nav class="links" id="menu"><a href="#">الرئيسية</a><a href="#products">المنتجات</a><a href="#reviews">التقييمات</a><a href="CONTACT.md">اتصل بنا</a></nav>
     <button class="cart" type="button">السلة: <b id="count">0</b></button>
+    <p class="banner" lang="en" dir="ltr">Fast and free delivery in Baghdad, Basra and Erbil</p>
   </header>
-  <p class="banner" lang="en" dir="ltr">Fast and free delivery in Baghdad, Basra and Erbil</p>
-  <input class="search" type="search" dir="auto" aria-label="ابحث في المنتجات" placeholder="Search products">
-  <main class="grid">
+  <search><input class="search" type="search" dir="auto" aria-label="ابحث في المنتجات" placeholder="Search products"></search>
+  <main>
+  <section id="products" aria-labelledby="products-title">
+  <h2 id="products-title">المنتجات</h2>
+  <div class="grid">
     <article class="card">
       <picture>
         <source type="image/webp" srcset="img/notebook-400.webp 400w, img/notebook-800.webp 800w, img/notebook-1200.webp 1200w"
@@ -24,7 +27,7 @@
              srcset="img/notebook-400.jpg 400w, img/notebook-800.jpg 800w, img/notebook-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" fetchpriority="high">
       </picture>
-      <h2>دفتر A5</h2>
+      <h3>دفتر A5</h3>
       <p class="desc">مئة ورقة مسطرة، غلاف مقوى.</p>
       <p class="price"><bdi>3,000 IQD</bdi></p>
       <button class="add">اضف للسلة</button>
@@ -37,7 +40,7 @@
              srcset="img/pen-400.jpg 400w, img/pen-800.jpg 800w, img/pen-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" loading="lazy">
       </picture>
-      <h2>قلم حبر</h2>
+      <h3>قلم حبر</h3>
       <p class="desc">حبر ازرق.</p>
       <p class="price"><bdi>1,000 IQD</bdi> <span class="fav">♡</span></p>
       <button class="add">اضف للسلة</button>
@@ -50,17 +53,21 @@
              srcset="img/bag-400.jpg 400w, img/bag-800.jpg 800w, img/bag-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" loading="lazy">
       </picture>
-      <h2>حقيبة ظهر</h2>
+      <h3>حقيبة ظهر</h3>
       <p class="desc">مقاومة للماء، جيبان جانبيان، حمالة مبطنة للظهر وجيب داخلي للحاسبة.</p>
       <p class="price"><bdi>18,500 IQD</bdi></p>
       <button class="add">اضف للسلة</button>
     </article>
-  </main>
+  </div>
+  </section>
   <section class="reviews" id="reviews"><h2>تقييمات الزبائن</h2><p class="stars" id="avg">…</p><ul id="review-list"></ul><button id="more-reviews" hidden>المزيد من التقييمات</button></section>
-  <footer class="footer" lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></footer>
-<form class="newsletter" lang="en" dir="ltr"><input type="email" autocomplete="email" aria-label="بريدك" placeholder="Your email"><button>Subscribe</button></form>
   <p class="total" lang="en" dir="ltr">Total: <b id="total">0</b> IQD</p>
   <button id="receipt">تحميل الفاتورة</button>
+  </main>
+  <footer class="footer">
+    <p lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></p>
+    <form class="newsletter" lang="en" dir="ltr"><input type="email" autocomplete="email" aria-label="بريدك" placeholder="Your email"><button>Subscribe</button></form>
+  </footer>
   <script type="module" src="app.js"></script>
 </body>
 </html>

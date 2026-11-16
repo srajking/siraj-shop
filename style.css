@@ -27,7 +27,7 @@ body { margin: 0; font-family: Plex, sans-serif;
   box-shadow: 0 6px 18px rgb(0 0 0 / .08); }
 .card img { display: block; width: 100%; height: auto;
   aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; }
-.card h2 { margin: 0; font-size: clamp(1.0625rem, 1rem + .3vw, 1.25rem); }
+.card h3 { margin: 0; font-size: clamp(1.0625rem, 1rem + .3vw, 1.25rem); }
 .card p { margin: 0; }
 .desc { color: var(--muted); font-size: .875rem; }
 .price { color: var(--price); font-weight: 700; }
@@ -46,7 +46,8 @@ body { margin: 0; font-family: Plex, sans-serif;
 .price { font-size: 1.25rem; letter-spacing: .5px; }
 .search { width: 100%; padding: 8px; box-sizing: border-box; }
 .reviews { padding: 16px; }
-.reviews h2 { font-size: 1.125rem; }
+.reviews h2, #products-title { font-size: 1.125rem; }
+#products-title { margin: 16px; }
 .stars { color: #F59E0B; }
 .newsletter { display: flex; flex-wrap: wrap; gap: 8px; }
 .newsletter input { flex: 1 1 12rem; }
