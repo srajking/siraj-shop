@@ -115,20 +115,29 @@ search.addEventListener('input', debounce(async () => {   // wait for a 300 ms p
     if (err.name !== 'AbortError') console.warn(err);
   }
 }, 300));
+async function gql(query, variables) {                    // one address; errors arrive inside a 200
+  const res = await fetch('/api/graphql', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables }) });
+  const body = await res.json();
+  if (body.errors) throw new Error('graphql: ' + body.errors.map(e => e.message).join(', '));
+  return body.data;
+}
+const REVIEWS = `query Reviews($after: String) {
+  reviewSummary { count avg }
+  reviews(limit: 5, after: $after) { items { stars text product { name } } next }
+}`;
 const reviewList = document.querySelector('#review-list'), moreReviews = document.querySelector('#more-reviews');
 let reviewsAfter = '';                                    // the server's cursor: '' = first page, null = the end
 async function loadReviews() {
   moreReviews.disabled = true;                            // one page at a time
   try {
-    const res = await fetch('/api/reviews?limit=5' + (reviewsAfter ? '&after=' + reviewsAfter : ''));
-    if (!res.ok) throw new Error('reviews: HTTP ' + res.status);
-    const { items, next } = await res.json();
-    for (const r of items) {
+    const { reviews, reviewSummary: s } = await gql(REVIEWS, { after: reviewsAfter || null });
+    for (const r of reviews.items) {
       const li = document.createElement('li');
-      li.textContent = '★'.repeat(r.stars) + ' ' + r.text;      // written by customers: never innerHTML
+      li.textContent = '★'.repeat(r.stars) + ' ' + r.text + ' — ' + r.product.name;   // written by customers: never innerHTML
       reviewList.append(li);
     }
-    reviewsAfter = next;
+    document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`;
+    reviewsAfter = reviews.next;
   } catch (err) {
     console.warn(err);
   }
@@ -137,9 +146,6 @@ async function loadReviews() {
 }
 moreReviews.addEventListener('click', loadReviews);
 loadReviews();
-fetch('/api/reviews/summary').then(r => r.json())
-  .then(s => { document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`; })
-  .catch(err => console.warn(err));
 document.querySelector('#receipt').addEventListener('click', async () => {   // the server's receipt as a file
   const res = await fetch('/api/cart/receipt');
   if (!res.ok) { showToast('لا توجد فاتورة: ' + ((await res.json().catch(() => null))?.error ?? res.status)); return; }

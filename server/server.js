@@ -1,9 +1,10 @@
-// Siraj Shop API v11 — a small local server for the book. Run: npm run api
+// Siraj Shop API v12 — a small local server for the book. Run: npm run api
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import { buildSchema, graphql, GraphQLError } from 'graphql';   // npm install graphql
 
 const PORT = Number(process.env.PORT) || 4000;
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -150,6 +151,64 @@ async function sendFile(res, path) {
   }
 }
 
+// GraphQL on /api/graphql: one address, the client chooses the fields
+const schema = buildSchema(`
+  type Product { id: ID!  name: String!  price: Int!  stock: Int!  category: String!  rating: Float  reviews(limit: Int = 3): [Review!]! }
+  type Review { id: ID!  stars: Int!  text: String!  product: Product! }
+  type ReviewPage { items: [Review!]!  next: String }
+  type Summary { count: Int!  avg: Float }
+  type CartItem { product: Product!  qty: Int! }
+  type Cart { items: [CartItem!]!  count: Int!  subtotal: Int!  total: Int! }
+  type Query {
+    products(q: String, category: String): [Product!]!
+    product(id: ID!): Product
+    reviews(product: ID, limit: Int = 5, after: String): ReviewPage
+    reviewSummary(product: ID): Summary!
+    cart: Cart!
+  }
+  type Mutation { addToCart(id: ID!, qty: Int = 1): Cart! }
+`);
+const avgOf = list => (list.length ? Math.round(10 * list.reduce((s, r) => s + r.stars, 0) / list.length) / 10 : null);
+const gProduct = p => p && { ...p,
+  rating: () => avgOf(reviews.filter(r => r.productId === p.id)),
+  reviews: ({ limit }) => reviews.filter(r => r.productId === p.id).sort((a, b) => b.id - a.id).slice(0, limit).map(gReview) };
+const gReview = r => ({ ...r, product: () => gProduct(products.find(p => p.id === r.productId)) });
+function gCart() {
+  const v = cartView();
+  return { ...v, items: v.items.map(i => ({ qty: i.qty, product: gProduct(products.find(p => p.id === i.id)) })) };
+}
+const root = {
+  products: ({ q, category }) => products.filter(p => (!q || p.name.includes(q.trim())) && (!category || p.category === category)).map(gProduct),
+  product: ({ id }) => gProduct(products.find(p => p.id === Number(id))) ?? null,
+  reviews: ({ product, limit, after }) => {
+    if (limit < 1 || limit > 50) throw new GraphQLError('limit must be 1 to 50', { extensions: { code: 'BAD_LIMIT', limit } });
+    let list = [...reviews].sort((a, b) => b.id - a.id);
+    if (product) list = list.filter(r => r.productId === Number(product));
+    let start = 0;
+    if (after) {
+      const last = idOf(after);
+      if (!last) throw new GraphQLError('bad cursor', { extensions: { code: 'BAD_CURSOR' } });
+      start = list.findIndex(r => r.id < last);
+      if (start < 0) start = list.length;
+    }
+    const items = list.slice(start, start + limit);
+    return { items: items.map(gReview), next: start + limit < list.length ? cursorOf(items.at(-1).id) : null };
+  },
+  reviewSummary: ({ product }) => {
+    const list = product ? reviews.filter(r => r.productId === Number(product)) : reviews;
+    return { count: list.length, avg: avgOf(list) };
+  },
+  cart: () => gCart(),
+  addToCart: ({ id, qty }) => {
+    const p = products.find(x => x.id === Number(id));
+    if (!p) throw new GraphQLError('product not found', { extensions: { code: 'NOT_FOUND', id } });
+    const now = (cart.get(p.id)?.qty || 0) + qty;
+    if (now > p.stock) throw new GraphQLError('not enough stock', { extensions: { code: 'NOT_ENOUGH_STOCK', stock: p.stock, wanted: now } });
+    cart.set(p.id, { id: p.id, qty: now, note: cart.get(p.id)?.note ?? '' });
+    return gCart();
+  },
+};
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const parts = url.pathname.split('/').filter(Boolean);
@@ -168,7 +227,7 @@ const server = createServer(async (req, res) => {
   const route = parts.slice(1).map(p => (/^\d+$/.test(p) ? ':id' : p)).join('/');
   const id = Number(parts.find(p => /^\d+$/.test(p)));
 
-  if (route.startsWith('cart') || route === 'orders') cart = cartOf(req, res);
+  if (route.startsWith('cart') || route === 'orders' || route === 'graphql') cart = cartOf(req, res);
   if (route === 'login') {
     if (m !== 'POST') return allow(res, ['POST']);
     const body = await readJson(req, res); if (!body) return;
@@ -223,8 +282,8 @@ const server = createServer(async (req, res) => {
   if (route === 'v0/products') return send(res, 308, { moved: '/api/products' }, { Location: '/api/products' });
 
   if (route === '') return send(res, 200, {                  // a tiny index of this API
-    name: 'Siraj Shop API', version: 11,
-    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)', 'GET /api/stock', 'GET /api/stock/changes?since= (long poll)', 'GET /api/stock/stream (SSE)', 'WS /api/live', 'PATCH /api/admin/stock/:id (X-API-Key)',
+    name: 'Siraj Shop API', version: 12,
+    endpoints: ['GET /api/products?q=&category=&sort=price|-price|name', 'GET /api/products/:id', 'GET|POST /api/products/:id/reviews', 'GET /api/reviews?product=&limit=&page= | &after=', 'GET /api/reviews/summary?product=', 'POST /api/uploads (FormData: file)', 'GET /api/uploads/:id', 'GET /api/cart/receipt (CSV)', 'GET /api/stock', 'GET /api/stock/changes?since= (long poll)', 'GET /api/stock/stream (SSE)', 'WS /api/live', 'POST /api/graphql { query, variables }', 'PATCH /api/admin/stock/:id (X-API-Key)',
       'GET|DELETE /api/cart', 'POST /api/cart/items', 'GET|PUT|PATCH|DELETE /api/cart/items/:id', 'POST /api/login', 'GET /api/me', 'POST /api/logout', 'POST /api/orders (login)', 'GET /api/admin/stock (X-API-Key)'],
   });
   if (route === 'products') {
@@ -241,6 +300,13 @@ const server = createServer(async (req, res) => {
     if (sort) list = [...list].sort(SORTS[sort]);
     res.setHeader('X-Total-Count', String(list.length));
     return cached(req, res, list);
+  }
+  if (route === 'graphql') {
+    if (m !== 'POST') return allow(res, ['POST']);
+    const body = await readJson(req, res); if (!body) return;
+    if (typeof body.query !== 'string') return send(res, 400, { errors: [{ message: 'send { query, variables }' }] });
+    const result = await graphql({ schema, source: body.query, rootValue: root, variableValues: body.variables, operationName: body.operationName });
+    return send(res, result.data === undefined ? 400 : 200, result);   // a query that cannot run has no data at all
   }
   if (route === 'connections') return send(res, 200, { sse: live.sse, ws: sockets.size });
   if (route === 'stock') return cached(req, res, stockNow());
@@ -443,4 +509,4 @@ server.on('upgrade', (req, socket) => {
   socket.on('close', bye); socket.on('error', bye);
 });
 
-server.listen(PORT, () => console.info(`Siraj Shop API v11: http://localhost:${PORT}/api/products`));
+server.listen(PORT, () => console.info(`Siraj Shop API v12: http://localhost:${PORT}/api/products`));
