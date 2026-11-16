@@ -120,7 +120,10 @@ async function loadReviews() {
     const { reviews, reviewSummary: s } = await api.graphql(REVIEWS, { after: reviewsAfter || null });
     for (const r of reviews.items) {
       const li = document.createElement('li');
-      li.textContent = '★'.repeat(r.stars) + ' ' + r.text + ' — ' + r.product.name;   // written by customers: never innerHTML
+      const stars = document.createElement('span'), said = document.createElement('span');
+      stars.textContent = '★'.repeat(r.stars); stars.setAttribute('aria-hidden', 'true');   // for the eye
+      said.textContent = r.stars + ' من 5'; said.className = 'vh';                          // for the ear
+      li.append(stars, said, ' ' + r.text + ' — ' + r.product.name);   // written by customers: never innerHTML
       reviewList.append(li);
     }
     document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`;
