@@ -15,7 +15,7 @@ body { margin: 0; font-family: Plex, sans-serif;
 .links.open { display: flex; }
 .menu-btn { padding: 6px 12px; border: 1px solid #fff; border-radius: 8px;
   background: none; color: #fff; font: inherit; }
-.top a:focus-visible, .menu-btn:focus-visible { outline: 3px solid #FACC15; outline-offset: 2px; }
+.top a:focus-visible, .menu-btn:focus-visible, .cart:focus-visible { outline: 3px solid #FACC15; outline-offset: 2px; }
 .links a { color: #fff; text-decoration: none; }
 .cart b { padding: 2px 10px; border-radius: 10px; border: 1px solid transparent;
   background: #fff; color: #1A56DB; }
@@ -89,7 +89,7 @@ input, button { font: inherit; }
   background: #1f2937; color: #fff; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .toast.show { opacity: 1; }
 .price .stock { display: block; margin-top: .2em; font-size: .75em; font-weight: 400; opacity: .8; }
-.cart[role="button"] { cursor: pointer; }
+.cart { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }   /* a real button that looks like the text */
 .mini-cart { position: fixed; inset-inline-end: 16px; top: 64px; z-index: 10; max-width: 320px; padding: .8em 1em; border-radius: 12px;
   background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
 .card[hidden] { display: none; }   /* hidden loses to .card { display: grid } */

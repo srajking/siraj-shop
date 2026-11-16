@@ -188,8 +188,6 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
 });
 
 const cartEl = document.querySelector('.cart');
-cartEl.setAttribute('role', 'button');
-cartEl.tabIndex = 0;
 function openMiniCart() {
   const box = document.createElement('div');
   box.className = 'mini-cart';
