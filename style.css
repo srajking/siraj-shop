@@ -105,3 +105,4 @@ input, button { font: inherit; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* for the reader only */
 .skip { position: absolute; inset-inline-start: 8px; top: -100px; z-index: 20; padding: 8px 16px; border-radius: 8px; background: #fff; color: #1A56DB; }
 .skip:focus { top: 8px; outline: 3px solid #FACC15; }   /* hidden until the keyboard reaches it */
+.links a[aria-current] { text-decoration: underline 2px; text-underline-offset: 6px; }   /* the eye sees what the reader hears */

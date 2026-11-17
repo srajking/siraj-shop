@@ -207,6 +207,19 @@ menuBtn.addEventListener('click', () => {
   menuBtn.setAttribute('aria-expanded', String(!open));
   menu.classList.toggle('open', !open);
 });
+for (const a of menu.querySelectorAll('a')) a.addEventListener('click', () => {
+  if (!menu.classList.contains('open')) return;
+  menuBtn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open');   // the button tells the truth again
+});
+function markCurrent() {                                   // the link of the section the user is in
+  const here = location.hash || '#';
+  for (const a of menu.querySelectorAll('a[href^="#"]')) {
+    if (a.getAttribute('href') === here) a.setAttribute('aria-current', 'location');
+    else a.removeAttribute('aria-current');
+  }
+}
+markCurrent();
+addEventListener('hashchange', markCurrent);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && menu.classList.contains('open')) {
     menuBtn.setAttribute('aria-expanded', 'false'); menu.classList.remove('open'); menuBtn.focus();
