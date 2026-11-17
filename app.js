@@ -192,18 +192,13 @@ document.querySelector('.grid').addEventListener('click', async e => {   // one 
 });
 
 const cartEl = document.querySelector('.cart');
+const mini = document.querySelector('.mini-cart');
 function openMiniCart() {
-  const box = document.createElement('div');
-  box.className = 'mini-cart';
-  box.setAttribute('role', 'dialog');
-  box.setAttribute('aria-label', 'السلة');
-  box.textContent = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ') || 'السلة فارغة';
-  document.body.append(box);
-  const ctrl = new AbortController();             // one switch for everything this box listens to
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { box.remove(); ctrl.abort(); }
-  }, { signal: ctrl.signal });
+  if (mini.open) return;                                   // one box, never two
+  mini.querySelector('.mini-items').textContent = [...cart].map(([name, i]) => name + ' × ' + i.qty).join('، ') || 'السلة فارغة';
+  mini.showModal();                                        // focus moves in, the page behind goes inert, Esc closes
 }
+mini.querySelector('.mini-close').addEventListener('click', () => mini.close());   // focus goes back to the cart button
 cartEl.addEventListener('click', openMiniCart);
 
 const menuBtn = document.querySelector('.menu-btn'), menu = document.getElementById('menu');

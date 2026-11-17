@@ -95,7 +95,9 @@ input, button { font: inherit; }
 .price .stock { display: block; margin-top: .2em; font-size: .75em; font-weight: 400; opacity: .8; }
 .cart { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }   /* a real button that looks like the text */
 .mini-cart { position: fixed; inset-inline-end: 16px; top: 64px; z-index: 10; max-width: 320px; padding: .8em 1em; border-radius: 12px;
-  background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
+  background: #fff; color: #111; box-shadow: 0 8px 24px rgb(0 0 0 / .18); margin: 0; border: 0; inset-inline-start: auto; }
+.mini-cart::backdrop { background: rgb(0 0 0 / .3); }
+.mini-cart h2 { margin: 0 0 .5em; font-size: 1rem; }
 .card[hidden] { display: none; }   /* hidden loses to .card { display: grid } */
 .reviews ul { list-style: none; padding: 0; margin: 0 0 12px; }
 .reviews li { padding: 6px 0; border-bottom: 1px solid #E2E8F0; }
