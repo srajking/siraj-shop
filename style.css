@@ -11,7 +11,7 @@ body { margin: 0; font-family: Plex, sans-serif;
   position: sticky; top: 0; z-index: 10; }
 .top h1 { margin: 0; font-size: clamp(1.25rem, 1.1rem + .6vw, 1.5rem); }
 .links { display: none; flex-direction: column; gap: 4px 16px;
-  flex: 1 1 100%; order: 1; }
+  flex: 1 1 100%; }   /* no order: what you see comes in the same order as Tab */
 .links.open { display: flex; }
 .menu-btn { padding: 6px 12px; border: 1px solid #fff; border-radius: 8px;
   background: none; color: #fff; font: inherit; }
@@ -73,7 +73,7 @@ input, button { font: inherit; }
   .footer { padding: 28px; }
 }
 @media (width >= 900px) {
-  .links { display: flex; flex-direction: row; flex-wrap: wrap; flex: 0 1 auto; order: 0; }
+  .links { display: flex; flex-direction: row; flex-wrap: wrap; flex: 0 1 auto; }
   .menu-btn { display: none; }
 }
 
@@ -101,3 +101,5 @@ input, button { font: inherit; }
 .reviews li { padding: 6px 0; border-bottom: 1px solid #E2E8F0; }
 #more-reviews { min-height: 44px; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* for the reader only */
+.skip { position: absolute; inset-inline-start: 8px; top: -100px; z-index: 20; padding: 8px 16px; border-radius: 8px; background: #fff; color: #1A56DB; }
+.skip:focus { top: 8px; outline: 3px solid #FACC15; }   /* hidden until the keyboard reaches it */
