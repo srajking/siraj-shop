@@ -56,7 +56,7 @@ body { margin: 0; font-family: Plex, sans-serif;
 
 /* forms and touch targets */
 input, button { font: inherit; }
-.search, .add, .menu-btn, .newsletter input, .newsletter button { min-height: 44px; }
+.search, .add, .menu-btn, .cart, .newsletter input, .newsletter button { min-height: 44px; }
 .links a, .footer a { display: inline-flex; align-items: center; min-height: 44px; }
 
 /* cards adapt to the products area, not the screen */
@@ -105,3 +105,4 @@ input, button { font: inherit; }
 .skip { position: absolute; inset-inline-start: 8px; top: -100px; z-index: 20; padding: 8px 16px; border-radius: 8px; background: #fff; color: #1A56DB; }
 .skip:focus { top: 8px; outline: 3px solid #FACC15; }   /* hidden until the keyboard reaches it */
 .links a[aria-current] { text-decoration: underline 2px; text-underline-offset: 6px; }   /* the eye sees what the reader hears */
+@media (height < 480px) { .top { position: static; } }   /* zoomed in: the header scrolls away instead of covering the page */
