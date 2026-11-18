@@ -3,64 +3,85 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>متجر</title>
+  <title>متجر سراج — دفاتر واقلام وحقائب</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a class="skip" href="#products">تخطى الى المنتجات</a>
   <header class="top">
     <h1>متجر سراج</h1>
     <button class="menu-btn" aria-expanded="false" aria-controls="menu">القائمة</button>
     <nav class="links" id="menu"><a href="#">الرئيسية</a><a href="#products">المنتجات</a><a href="#reviews">التقييمات</a><a href="CONTACT.md">اتصل بنا</a></nav>
-    <span class="cart">السلة: <b id="count">0</b></span>
+    <button class="cart" type="button">السلة: <b id="count">0</b></button>
+    <p class="banner" lang="en" dir="ltr">Fast and free delivery in Baghdad, Basra and Erbil</p>
   </header>
-  <p class="banner" lang="en" dir="ltr">Fast and free delivery in Baghdad, Basra and Erbil</p>
-  <input class="search" type="search" dir="auto" aria-label="ابحث في المنتجات" placeholder="Search products">
-  <main class="grid">
+  <search><input class="search" type="search" dir="auto" aria-label="ابحث في المنتجات" placeholder="ابحث عن منتج"><p id="search-status" role="status"></p></search>
+  <main>
+  <section id="products" aria-labelledby="products-title">
+  <h2 id="products-title">المنتجات</h2>
+  <div class="grid">
     <article class="card">
       <picture>
         <source type="image/webp" srcset="img/notebook-400.webp 400w, img/notebook-800.webp 800w, img/notebook-1200.webp 1200w"
                 sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw">
-        <img src="img/notebook-800.jpg" alt="دفتر A5"
+        <img src="img/notebook-800.jpg" alt="دفتر ازرق بسلك جانبي"
              srcset="img/notebook-400.jpg 400w, img/notebook-800.jpg 800w, img/notebook-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" fetchpriority="high">
       </picture>
-      <h2>دفتر A5</h2>
+      <h3>دفتر A5</h3>
       <p class="desc">مئة ورقة مسطرة، غلاف مقوى.</p>
-      <p class="price"><bdi>3,000 IQD</bdi></p>
-      <button class="add">اضف للسلة</button>
+      <p class="price"><bdi lang="en">3,000 IQD</bdi></p>
+      <button class="add">اضف للسلة<span class="vh">: دفتر A5</span></button>
     </article>
     <article class="card">
       <picture>
         <source type="image/webp" srcset="img/pen-400.webp 400w, img/pen-800.webp 800w, img/pen-1200.webp 1200w"
                 sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw">
-        <img src="img/pen-800.jpg" alt="قلم حبر"
+        <img src="img/pen-800.jpg" alt="قلم اسود بحلقة ذهبية"
              srcset="img/pen-400.jpg 400w, img/pen-800.jpg 800w, img/pen-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" loading="lazy">
       </picture>
-      <h2>قلم حبر</h2>
+      <h3>قلم حبر</h3>
       <p class="desc">حبر ازرق.</p>
-      <p class="price"><bdi>1,000 IQD</bdi> <span class="fav">♡</span></p>
-      <button class="add">اضف للسلة</button>
+      <p class="price"><bdi lang="en">1,000 IQD</bdi> <span class="fav" aria-hidden="true">♡</span></p>
+      <button class="add">اضف للسلة<span class="vh">: قلم حبر</span></button>
     </article>
     <article class="card">
       <picture>
         <source type="image/webp" srcset="img/bag-400.webp 400w, img/bag-800.webp 800w, img/bag-1200.webp 1200w"
                 sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw">
-        <img src="img/bag-800.jpg" alt="حقيبة ظهر"
+        <img src="img/bag-800.jpg" alt="حقيبة خضراء بجيب امامي"
              srcset="img/bag-400.jpg 400w, img/bag-800.jpg 800w, img/bag-1200.jpg 1200w"
              sizes="(width >= 900px) 33vw, (width >= 600px) 50vw, 100vw" width="1600" height="1200" loading="lazy">
       </picture>
-      <h2>حقيبة ظهر</h2>
+      <h3>حقيبة ظهر</h3>
       <p class="desc">مقاومة للماء، جيبان جانبيان، حمالة مبطنة للظهر وجيب داخلي للحاسبة.</p>
-      <p class="price"><bdi>18,500 IQD</bdi></p>
-      <button class="add">اضف للسلة</button>
+      <p class="price"><bdi lang="en">18,500 IQD</bdi></p>
+      <button class="add">اضف للسلة<span class="vh">: حقيبة ظهر</span></button>
     </article>
-  </main>
-  <section class="reviews" id="reviews"><h2>تقييمات الزبائن</h2><p class="stars" id="avg">…</p><ul id="review-list"></ul><button id="more-reviews" hidden>المزيد من التقييمات</button></section>
-  <footer class="footer" lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></footer>
-<form class="newsletter" lang="en" dir="ltr"><input type="email" autocomplete="email" aria-label="بريدك" placeholder="Your email"><button>Subscribe</button></form>
+  </div>
+  </section>
+  <section class="reviews" id="reviews" aria-labelledby="reviews-title"><h2 id="reviews-title">تقييمات الزبائن</h2><p class="stars" id="avg">…</p><ul id="review-list"></ul><p id="reviews-status" class="vh" role="status"></p><button id="more-reviews" hidden>المزيد من التقييمات</button></section>
   <p class="total" lang="en" dir="ltr">Total: <b id="total">0</b> IQD</p>
   <button id="receipt">تحميل الفاتورة</button>
+  </main>
+  <footer class="footer">
+    <p lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></p>
+    <form class="newsletter" lang="en" dir="ltr" novalidate aria-labelledby="news-title">
+      <h2 id="news-title">Monthly newsletter</h2>
+      <label for="news-email">Your email</label>
+      <input id="news-email" name="email" type="email" autocomplete="email" required aria-describedby="news-hint news-err">
+      <button>Subscribe</button>
+      <p id="news-hint" class="hint">One email a month. No spam.</p>
+      <p id="news-err" class="err" role="alert"></p>
+      <p id="news-done" role="status"></p>
+    </form>
+  </footer>
+  <dialog class="mini-cart" aria-labelledby="mini-title">
+    <h2 id="mini-title">السلة</h2>
+    <p class="mini-items"></p>
+    <button class="mini-close" type="button">اغلق</button>
+  </dialog>
   <script type="module" src="app.js"></script>
 </body>
 </html>
