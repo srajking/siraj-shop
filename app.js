@@ -129,7 +129,9 @@ async function loadReviews(asked) {
       const stars = document.createElement('span'), said = document.createElement('span');
       stars.textContent = '★'.repeat(r.stars); stars.setAttribute('aria-hidden', 'true');   // for the eye
       said.textContent = r.stars + ' من 5'; said.className = 'vh';                          // for the ear
-      li.append(stars, said, ' ' + r.text + ' — ' + r.product.name);   // written by customers: never innerHTML
+      const words = document.createElement('bdi');         // any language, any direction: kept apart from ours
+      words.textContent = r.text;                           // written by customers: never innerHTML
+      li.append(stars, said, ' ', words, ' — ' + r.product.name);
       reviewList.append(li);
       first ??= li;
     }
