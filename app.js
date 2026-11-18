@@ -234,5 +234,5 @@ news.addEventListener('submit', e => {
   newsErr.textContent = ok ? '' : 'Enter an email like name@example.com';
   if (!ok) { newsEmail.focus(); return; }
   newsEmail.value = '';
-  document.querySelector('#news-hint').textContent = 'Thanks! Check your inbox.';
+  document.querySelector('#news-done').textContent = 'Thanks! Check your inbox.';   // a status region: spoken without moving focus
 });
