@@ -56,7 +56,7 @@ body { margin: 0; font-family: Plex, sans-serif;
 
 /* forms and touch targets */
 input, button { font: inherit; }
-.search, .add, .menu-btn, .cart, .newsletter input, .newsletter button { min-height: 44px; }
+.search, .add, .menu-btn, .cart, #receipt, .mini-close, .newsletter input, .newsletter button { min-height: 44px; }
 .links a, .footer a { display: inline-flex; align-items: center; min-height: 44px; }
 
 /* cards adapt to the products area, not the screen */
