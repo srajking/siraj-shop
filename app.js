@@ -150,12 +150,17 @@ toast.className = 'toast';
 toast.setAttribute('role', 'status');
 document.body.append(toast);
 let hideTimer;
+function hideLater() {                                   // more words, more time
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => toast.classList.remove('show'), 5000 + 300 * toast.textContent.split(' ').length);
+}
 function showToast(text) {
   toast.textContent = text;
   toast.classList.add('show');
-  clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  hideLater();
 }
+toast.addEventListener('mouseenter', () => clearTimeout(hideTimer));   // someone is reading it: wait
+toast.addEventListener('mouseleave', hideLater);
 async function canAdd(name) {
   const left = await checkStock(name).catch(() => Infinity);   // no record: do not block
   return cart.qty(name) < left;
