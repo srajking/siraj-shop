@@ -1,5 +1,18 @@
 # Changelog
 
+## 5.0.0 — the shop for every customer
+
+- Keyboard: the cart is a real button, the phone menu keeps Tab order, a skip link goes to the products
+- Screen readers: landmarks and headings to jump between, names that tell the add buttons apart, described photos, stars said as a number
+- The mini cart is a modal dialog that takes the focus and gives it back
+- Newsletter: a visible label, a hint, and errors and thanks that are announced
+- Colour: the rating and the dark-mode error pass AA contrast
+- Time: the added-to-cart message stays long enough to read and waits while hovered
+- Zoom: at 400% the header scrolls away instead of covering the page; every button is at least 44px
+- Load more keeps the focus and says how many reviews arrived; search says how many products it found
+- Language: English prices and reviews are marked, customer reviews are isolated so they never flip a line
+- `npm test` now runs accessibility tests (axe, size, language, focus, zoom), in CI too
+
 ## 4.0.1
 
 - README: start the API (`npm run api`) before the page; how to run the tests

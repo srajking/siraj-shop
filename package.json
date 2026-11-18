@@ -1,6 +1,6 @@
 {
   "name": "siraj-shop",
-  "version": "1.0.0",
+  "version": "5.0.0",
   "description": "A small shop page for the Git book.",
   "main": "app.js",
   "dependencies": {
