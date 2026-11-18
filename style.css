@@ -108,3 +108,4 @@ input, button { font: inherit; }
 @media (height < 480px) { .top { position: static; } }   /* zoomed in: the header scrolls away instead of covering the page */
 #more-reviews[aria-disabled="true"] { opacity: .6; cursor: progress; }   /* busy, but still holds the focus */
 #search-status { margin: 4px 16px; font-size: .875rem; }
+.newsletter h2 { flex-basis: 100%; margin: 0; font-size: 1rem; }   /* H and D can find the form now */

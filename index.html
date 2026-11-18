@@ -61,13 +61,14 @@
     </article>
   </div>
   </section>
-  <section class="reviews" id="reviews"><h2>تقييمات الزبائن</h2><p class="stars" id="avg">…</p><ul id="review-list"></ul><p id="reviews-status" class="vh" role="status"></p><button id="more-reviews" hidden>المزيد من التقييمات</button></section>
+  <section class="reviews" id="reviews" aria-labelledby="reviews-title"><h2 id="reviews-title">تقييمات الزبائن</h2><p class="stars" id="avg">…</p><ul id="review-list"></ul><p id="reviews-status" class="vh" role="status"></p><button id="more-reviews" hidden>المزيد من التقييمات</button></section>
   <p class="total" lang="en" dir="ltr">Total: <b id="total">0</b> IQD</p>
   <button id="receipt">تحميل الفاتورة</button>
   </main>
   <footer class="footer">
     <p lang="en" dir="ltr">Siraj Shop, Baghdad — open 10am to 11pm · 0780 000 0000 · 2026 · <a href="CONTACT.md" target="_blank">Contact</a></p>
-    <form class="newsletter" lang="en" dir="ltr" novalidate>
+    <form class="newsletter" lang="en" dir="ltr" novalidate aria-labelledby="news-title">
+      <h2 id="news-title">Monthly newsletter</h2>
       <label for="news-email">Your email</label>
       <input id="news-email" name="email" type="email" autocomplete="email" required aria-describedby="news-hint news-err">
       <button>Subscribe</button>
