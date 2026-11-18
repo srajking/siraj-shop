@@ -10,6 +10,8 @@ let server, browser;
 before(async () => {
   server = spawn('node', ['server/server.js'], { stdio: 'ignore' });
   for (let i = 0; i < 50 && !(await fetch(URL_).then(() => true, () => false)); i++) await new Promise((r) => setTimeout(r, 100));
+  await fetch(URL_ + 'api/products/2/reviews', { method: 'POST', headers: { 'content-type': 'application/json' },   // always test with one English review
+    body: JSON.stringify({ stars: 4, text: 'Great pen, writes smoothly!' }) });
   browser = await chromium.launch();
 });
 after(async () => { await browser.close(); server.kill(); });

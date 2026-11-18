@@ -131,6 +131,7 @@ async function loadReviews(asked) {
       said.textContent = r.stars + ' من 5'; said.className = 'vh';                          // for the ear
       const words = document.createElement('bdi');         // any language, any direction: kept apart from ours
       words.textContent = r.text;                           // written by customers: never innerHTML
+      if (/[A-Za-z]/.test(r.text) && !/[\u0600-\u06FF]/.test(r.text)) words.lang = 'en';   // Latin letters, no Arabic: read it in English
       li.append(stars, said, ' ', words, ' — ' + r.product.name);
       reviewList.append(li);
       first ??= li;
