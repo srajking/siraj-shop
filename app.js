@@ -103,7 +103,10 @@ search.addEventListener('input', debounce(async () => {   // wait for a 300 ms p
   const ctrl = searching = new AbortController();
   try {
     const names = new Set((await api.products.list({ q: search.value.trim() }, { signal: ctrl.signal })).map(p => p.name));
-    for (const card of document.querySelectorAll('.card')) card.hidden = !names.has(card.querySelector('h3').textContent);
+    const cards = [...document.querySelectorAll('.card')];
+    for (const card of cards) card.hidden = !names.has(card.querySelector('h3').textContent);
+    const n = cards.filter(c => !c.hidden).length, q = search.value.trim();   // one sentence when typing stops
+    document.querySelector('#search-status').textContent = !q ? '' : n ? `${n} من ${cards.length} منتجات` : `لا منتجات تطابق «${q}»`;
   } catch (err) {
     if (err.name !== 'AbortError') console.warn(err);
   }
@@ -114,8 +117,11 @@ const REVIEWS = `query Reviews($after: String) {
 }`;
 const reviewList = document.querySelector('#review-list'), moreReviews = document.querySelector('#more-reviews');
 let reviewsAfter = '';                                    // the server's cursor: '' = first page, null = the end
-async function loadReviews() {
-  moreReviews.disabled = true;                            // one page at a time
+const reviewsStatus = document.querySelector('#reviews-status');
+async function loadReviews(asked) {
+  if (moreReviews.getAttribute('aria-disabled') === 'true') return;   // one page at a time
+  moreReviews.setAttribute('aria-disabled', 'true');      // not disabled: the focus stays on the button
+  let first = null, total = 0;
   try {
     const { reviews, reviewSummary: s } = await api.graphql(REVIEWS, { after: reviewsAfter || null });
     for (const r of reviews.items) {
@@ -125,16 +131,21 @@ async function loadReviews() {
       said.textContent = r.stars + ' من 5'; said.className = 'vh';                          // for the ear
       li.append(stars, said, ' ' + r.text + ' — ' + r.product.name);   // written by customers: never innerHTML
       reviewList.append(li);
+      first ??= li;
     }
+    total = s.count;
     document.querySelector('#avg').textContent = `${s.avg} من 5 · ${s.count} تقييم`;
     reviewsAfter = reviews.next;
   } catch (err) {
     console.warn(err);
   }
-  moreReviews.disabled = false;
+  moreReviews.removeAttribute('aria-disabled');
   moreReviews.hidden = reviewsAfter === null;
+  if (!asked || !first) return;                           // the first page loads by itself: say nothing
+  reviewsStatus.textContent = `اضيفت تقييمات · ${reviewList.children.length} من ${total}`;
+  if (moreReviews.hidden) { first.tabIndex = -1; first.focus(); }   // the button is gone: go to what is new
 }
-moreReviews.addEventListener('click', loadReviews);
+moreReviews.addEventListener('click', () => loadReviews(true));
 loadReviews();
 document.querySelector('#receipt').addEventListener('click', async () => {   // the server's receipt as a file
   const file = await api.cart.receipt().catch(err => { showToast('لا توجد فاتورة: ' + err.message); });
