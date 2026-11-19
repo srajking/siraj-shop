@@ -1,2 +1,4 @@
 .header { border-bottom: 2px solid var(--accent); margin-bottom: 16px; }
 .title { margin: 0; color: var(--accent); }
+.cart { display: flex; gap: 8px; align-items: center; }
+.cart button { font: inherit; padding: 2px 10px; border-radius: 8px; border: 1px solid var(--line); background: none; color: var(--text); cursor: pointer; }

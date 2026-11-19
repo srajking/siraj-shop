@@ -1,17 +1,11 @@
-import { useState } from 'react'
 import s from './ProductCard.module.css'
 
 function iqd(n) {
   return n.toLocaleString('en-US') + ' IQD'
 }
 
-export default function ProductCard({ product }) {
-  const [qty, setQty] = useState(0)
+export default function ProductCard({ product, qty, onAdd }) {
   const out = product.stock === 0
-
-  function add(n) {
-    for (let i = 0; i < n; i++) setQty(q => Math.min(q + 1, product.stock))
-  }
 
   return (
     <article className={out ? `${s.card} ${s.out}` : s.card}>
@@ -21,8 +15,8 @@ export default function ProductCard({ product }) {
       <p className={s.price}><bdi lang="en">{iqd(product.price)}</bdi></p>
       {out ? <p>نفد</p> : <p>متوفر: {product.stock}</p>}
       <div className={s.buy}>
-        <button disabled={out || qty === product.stock} onClick={() => add(1)}>اضف</button>
-        <button disabled={out || qty === product.stock} onClick={() => add(2)}>اضف 2</button>
+        <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 1)}>اضف</button>
+        <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 2)}>اضف 2</button>
         {qty > 0 && <span>في السلة: {qty}</span>}
       </div>
     </article>
