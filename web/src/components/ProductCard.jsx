@@ -4,7 +4,7 @@ function iqd(n) {
   return n.toLocaleString('en-US') + ' IQD'
 }
 
-export default function ProductCard({ product, qty, onAdd }) {
+export default function ProductCard({ product, qty, onAdd, onDecrease }) {
   const out = product.stock === 0
 
   return (
@@ -17,6 +17,7 @@ export default function ProductCard({ product, qty, onAdd }) {
       <div className={s.buy}>
         <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 1)}>اضف</button>
         <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 2)}>اضف 2</button>
+        <button disabled={out} onClick={() => onDecrease(product)}>انقص</button>
         {qty > 0 && <span>في السلة: {qty}</span>}
       </div>
     </article>
