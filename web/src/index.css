@@ -1,1 +1,5 @@
-body { margin: 24px; font-family: system-ui, sans-serif; }
+:root { --bg: #ffffff; --text: #1a1a1a; --card: #f6f6f4; --line: #dddddd; --accent: #2f7d5b; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121417; --text: #eaeaea; --card: #1f232a; --line: #343a44; --accent: #6fcf97; }
+}
+body { margin: 24px; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
