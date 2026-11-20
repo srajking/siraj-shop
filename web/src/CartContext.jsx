@@ -1,11 +1,21 @@
 // CartContext.jsx — the cart and its dispatch, for every component below the provider
-import { createContext, useContext, useReducer } from 'react'
+import { createContext, useContext, useEffect, useReducer } from 'react'
 import { cartReducer } from './cartReducer.js'
 
 const CartContext = createContext(null)
 
+// read the saved cart ONCE, before the first render
+function loadCart() {
+  return JSON.parse(localStorage.getItem('cart') ?? '{}')
+}
+
 export function CartProvider({ children }) {
-  const [cart, dispatch] = useReducer(cartReducer, {})          // { productId: qty }
+  const [cart, dispatch] = useReducer(cartReducer, null, loadCart)   // { productId: qty }
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart))          // save on every change
+  }, [cart])
+
   return <CartContext value={{ cart, dispatch }}>{children}</CartContext>
 }
 
