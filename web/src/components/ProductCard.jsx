@@ -1,10 +1,13 @@
 import s from './ProductCard.module.css'
+import { useCart } from '../CartContext.jsx'
 
 function iqd(n) {
   return n.toLocaleString('en-US') + ' IQD'
 }
 
-export default function ProductCard({ product, qty, onAdd, onDecrease }) {
+export default function ProductCard({ product }) {
+  const { cart, dispatch } = useCart()
+  const qty = cart[product.id] ?? 0
   const out = product.stock === 0
 
   return (
@@ -15,9 +18,9 @@ export default function ProductCard({ product, qty, onAdd, onDecrease }) {
       <p className={s.price}><bdi lang="en">{iqd(product.price)}</bdi></p>
       {out ? <p>نفد</p> : <p>متوفر: {product.stock}</p>}
       <div className={s.buy}>
-        <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 1)}>اضف</button>
-        <button disabled={out || qty === product.stock} onClick={() => onAdd(product, 2)}>اضف 2</button>
-        <button disabled={out} onClick={() => onDecrease(product)}>انقص</button>
+        <button disabled={out || qty === product.stock} onClick={() => dispatch({ type: 'added', id: product.id, n: 1, stock: product.stock })}>اضف</button>
+        <button disabled={out || qty === product.stock} onClick={() => dispatch({ type: 'added', id: product.id, n: 2, stock: product.stock })}>اضف 2</button>
+        <button disabled={out} onClick={() => dispatch({ type: 'decreased', id: product.id })}>انقص</button>
         {qty > 0 && <span>في السلة: {qty}</span>}
       </div>
     </article>

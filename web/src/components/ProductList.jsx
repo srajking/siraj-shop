@@ -1,10 +1,12 @@
-import ProductCard from './ProductCard.jsx'
-import s from './ProductList.module.css'
+import Shelf from './Shelf.jsx'
 
-export default function ProductList({ products, cart, onAdd, onDecrease }) {
+export default function ProductList({ products }) {
+  const inStock = products.filter(p => p.stock > 0)
+  const soldOut = products.filter(p => p.stock === 0)
   return (
-    <section className={s.list}>
-      {products.map(p => <ProductCard key={p.id} product={p} qty={cart[p.id] ?? 0} onAdd={onAdd} onDecrease={onDecrease} />)}
-    </section>
+    <>
+      <Shelf title="متوفر الآن" products={inStock} />
+      <Shelf title="نفد" products={soldOut} />
+    </>
   )
 }
