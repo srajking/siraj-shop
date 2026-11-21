@@ -25,3 +25,13 @@ test('a server error is a message, not a crash', async () => {
   expect(await screen.findByText('البحث غير متاح الآن')).toBeInTheDocument()
   vi.unstubAllGlobals()
 })
+
+test('an answer in the wrong shape is a message, not a crash', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ items: [{ id: 3, name: 'حقيبة ظهر' }] }) })))
+  const user = userEvent.setup()
+  render(<SearchBox />)
+
+  await user.type(screen.getByRole('searchbox', { name: 'ابحث في المتجر' }), 'حقيبة')
+  expect(await screen.findByText('البحث غير متاح الآن')).toBeInTheDocument()
+  vi.unstubAllGlobals()
+})

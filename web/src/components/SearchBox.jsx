@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import s from './SearchBox.module.css'
-import { getJson, HttpError } from '../api.ts'
+import { getJson, HttpError, DataError } from '../api.ts'
+import { isSearchHits } from '../checks.ts'
 
 export default function SearchBox() {
   const [q, setQ] = useState('')
@@ -11,11 +12,11 @@ export default function SearchBox() {
     if (!q.trim()) return                         // nothing to ask
     const controller = new AbortController()
     const timer = setTimeout(() => {              // ask only after typing pauses
-      getJson('/api/products?q=' + encodeURIComponent(q), controller.signal)
+      getJson('/api/products?q=' + encodeURIComponent(q), isSearchHits, controller.signal)
         .then(data => { setResults(data); setFailed(false) })
         .catch(e => {
           if (e.name === 'AbortError') return
-          if (e instanceof HttpError) return setFailed(true)     // the server said no
+          if (e instanceof HttpError || e instanceof DataError) return setFailed(true)   // no, or nonsense
           throw e
         })
     }, 300)
