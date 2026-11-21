@@ -1,7 +1,7 @@
 // storage.ts — every localStorage key the shop uses, under one prefix
-export type StorageKey = 'siraj-shop:cart' | 'siraj-shop:dark'
-
 export const STORAGE = {
   cart: 'siraj-shop:cart',
   dark: 'siraj-shop:dark',
-} as const satisfies { [name: string]: StorageKey }
+} as const satisfies { [name: string]: `siraj-shop:${string}` }
+
+export type StorageKey = (typeof STORAGE)[keyof typeof STORAGE]   // read from the object
