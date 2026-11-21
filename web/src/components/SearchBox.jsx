@@ -8,11 +8,16 @@ export default function SearchBox() {
   useEffect(() => {
     if (!q.trim()) return setResults([])
     const controller = new AbortController()
-    fetch('/api/products?q=' + encodeURIComponent(q), { signal: controller.signal })
-      .then(res => res.json())
-      .then(data => setResults(data))
-      .catch(e => { if (e.name !== 'AbortError') throw e })
-    return () => controller.abort()               // a newer q: drop the old answer
+    const timer = setTimeout(() => {              // ask only after typing pauses
+      fetch('/api/products?q=' + encodeURIComponent(q), { signal: controller.signal })
+        .then(res => res.json())
+        .then(data => setResults(data))
+        .catch(e => { if (e.name !== 'AbortError') throw e })
+    }, 300)
+    return () => {                                // a newer q: cancel the wait and the old answer
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [q])
 
   return (
