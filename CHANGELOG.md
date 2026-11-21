@@ -1,5 +1,16 @@
 # Changelog
 
+## 6.0.0 — the shop in React
+
+- The shop is rebuilt in React 19 with Vite, in `web/`: cards drawn from data, small components, CSS Modules, a dark theme that is remembered
+- The cart: every rule in one reducer, shared through context, kept after a reload
+- Search asks the API once typing pauses and drops answers it no longer needs
+- Product pages and a 404, each with its own title; after a link, focus moves to the new page's heading
+- The cart panel is a native dialog: it takes the focus, keeps Tab inside and closes with Escape
+- A reviews form whose errors are announced and focused
+- `npm test` in `web/`: Vitest and Testing Library; CI lints, tests and builds `web/` on every push
+- The shop server serves the built shop at `/shop/` (run `npm run build` in `web/` first)
+
 ## 5.0.0 — the shop for every customer
 
 - Keyboard: the cart is a real button, the phone menu keeps Tab order, a skip link goes to the products
