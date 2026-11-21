@@ -1,10 +1,7 @@
 import { Link } from 'react-router'
 import s from './ProductCard.module.css'
 import { useCart } from '../useCart.js'
-
-function iqd(n) {
-  return n.toLocaleString('en-US') + ' IQD'
-}
+import { iqd } from '../money.ts'
 
 export default function ProductCard({ product }) {
   const { cart, dispatch } = useCart()

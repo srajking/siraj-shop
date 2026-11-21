@@ -1,13 +1,10 @@
 import { useEffect } from 'react'
 import s from './Header.module.css'
 import { useCart } from '../useCart.js'
+import { iqd } from '../money.ts'
 import { products } from '../products.js'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import CartPanel from './CartPanel.jsx'
-
-function iqd(n) {
-  return n.toLocaleString('en-US') + ' IQD'
-}
 
 export default function Header() {
   const { cart, dispatch } = useCart()
