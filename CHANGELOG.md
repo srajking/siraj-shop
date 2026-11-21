@@ -1,5 +1,16 @@
 # Changelog
 
+## 7.0.0 — the shop in TypeScript
+
+- Every source file in `web/src` is TypeScript: `npm run typecheck` reports 0 errors with `strict` on (it started at 44)
+- One `Product`, `Cart` and `CartAction` for the whole shop in `types.ts`; a wrong cart action is a type error
+- Bugs found on the way: `NaN` from an action without stock, a header count that disagreed with the panel, a broken image from a misspelt field, `0pen00` from another app's `cart` key
+- Storage keys share the `siraj-shop:` prefix, checked by a template type (saved carts under the old `cart` key are not read)
+- Search: a failing server or an answer in the wrong shape shows "البحث غير متاح الآن" instead of crashing (`HttpError`, `DataError`, type guards)
+- CSS Modules have real class types (`scripts/css-types.mjs` writes `.d.css.ts` files)
+- ESLint lints `.ts` and `.tsx` with typescript-eslint (it needs the TypeScript 6 API; `tsc` 7 runs as `tsc7`)
+- CI checks types on every push, before lint, tests and build — `vite build` alone does not
+
 ## 6.0.0 — the shop in React
 
 - The shop is rebuilt in React 19 with Vite, in `web/`: cards drawn from data, small components, CSS Modules, a dark theme that is remembered
