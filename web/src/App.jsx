@@ -7,7 +7,7 @@ import SearchBox from './components/SearchBox.jsx'
 import ProductPage from './pages/ProductPage.jsx'
 import NotFound from './pages/NotFound.jsx'
 import { CartProvider } from './CartContext.jsx'
-import { products } from './products.js'
+import { products } from './products.ts'
 
 function Layout() {
   const { pathname } = useLocation()

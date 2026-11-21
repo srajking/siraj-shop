@@ -1,12 +1,14 @@
 // cartReducer.ts — every rule of the cart, in one pure function
+import type { Cart, CartAction } from './types.ts'
+
 function missing(field: string): never {                       // never returns
   throw Error('cart action is missing ' + field)
 }
 
 export function cartReducer(
-  cart: { [id: number]: number },                              // productId → qty
-  action: { type: string; id?: number; n?: number; stock?: number },
-): { [id: number]: number } {
+  cart: Cart,
+  action: CartAction,
+): Cart {
   switch (action.type) {
     case 'added': {
       const id = action.id ?? missing('id')

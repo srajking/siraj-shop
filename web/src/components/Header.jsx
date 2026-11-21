@@ -3,7 +3,7 @@ import s from './Header.module.css'
 import { useCart } from '../useCart.js'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
-import { products } from '../products.js'
+import { products } from '../products.ts'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import CartPanel from './CartPanel.jsx'
 

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { CartProvider } from '../CartContext.jsx'
 import ProductCard from './ProductCard.jsx'
-import { products } from '../products.js'
+import { products } from '../products.ts'
 
 const bag = products.find(p => p.name === 'حقيبة ظهر')     // stock: 3
 const pen = products.find(p => p.name === 'قلم حبر')       // stock: 0

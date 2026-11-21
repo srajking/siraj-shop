@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
 import ProductCard from '../components/ProductCard.jsx'
 import NotFound from './NotFound.jsx'
-import { products } from '../products.js'
+import { products } from '../products.ts'
 
 export default function ProductPage() {
   const { id } = useParams()                                   // a string: "1"
