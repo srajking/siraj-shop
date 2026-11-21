@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "typecheck": "tsc -p .",
+    "typecheck": "node scripts/css-types.mjs && tsc -p .",
     "test": "vitest run",
     "preview": "vite preview"
   },

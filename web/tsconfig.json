@@ -4,6 +4,7 @@
     "checkJs": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
+    "allowArbitraryExtensions": true,
     "strict": true,
     "jsx": "react-jsx",
     "target": "es2022",
