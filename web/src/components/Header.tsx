@@ -6,7 +6,7 @@ import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
 import { useLocalStorage } from '../hooks/useLocalStorage.ts'
 import { STORAGE } from '../storage.ts'
-import CartPanel from './CartPanel.jsx'
+import CartPanel from './CartPanel.tsx'
 
 export default function Header() {
   const { cart, dispatch } = useCart()

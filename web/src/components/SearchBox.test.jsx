@@ -1,7 +1,7 @@
 import { test, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import SearchBox from './SearchBox.jsx'
+import SearchBox from './SearchBox.tsx'
 
 test('asks the server once, after typing stops', async () => {
   const fetch = vi.fn(async () => ({ ok: true, json: async () => [{ id: 3, name: 'حقيبة ظهر' }] }))

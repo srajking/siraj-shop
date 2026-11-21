@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router'
 import ProductCard from '../components/ProductCard.tsx'
-import NotFound from './NotFound.jsx'
+import NotFound from './NotFound.tsx'
 import { products } from '../products.ts'
 
 export default function ProductPage() {

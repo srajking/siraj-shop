@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import App from './App.jsx'
+import App from './App.tsx'
 
 test('following a product link: new title, focus on its heading', async () => {
   const user = userEvent.setup()

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import s from './SearchBox.module.css'
 import { getJson, HttpError, DataError } from '../api.ts'
-import { isSearchHits } from '../checks.ts'
+import { isSearchHits, type SearchHit } from '../checks.ts'
 
 export default function SearchBox() {
   const [q, setQ] = useState('')
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<SearchHit[]>([])
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
