@@ -3,7 +3,7 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
-    "strict": false,
+    "strict": true,
     "jsx": "react-jsx",
     "target": "es2022",
     "module": "esnext",
