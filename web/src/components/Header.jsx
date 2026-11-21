@@ -3,6 +3,7 @@ import s from './Header.module.css'
 import { useCart } from '../CartContext.jsx'
 import { products } from '../products.js'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import CartPanel from './CartPanel.jsx'
 
 function iqd(n) {
   return n.toLocaleString('en-US') + ' IQD'
@@ -25,6 +26,7 @@ export default function Header() {
       <p className={s.cart} id="cart">
         السلة: <b id="count">{count}</b> — <bdi lang="en">{iqd(total)}</bdi>
         {count > 0 && <button onClick={() => dispatch({ type: 'cleared' })}>افرغ السلة</button>}
+        <CartPanel />
       </p>
       <button onClick={() => setDark(!dark)}>{dark ? 'الوضع الفاتح' : 'الوضع الداكن'}</button>
     </header>
