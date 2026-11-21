@@ -215,6 +215,10 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const parts = url.pathname.split('/').filter(Boolean);
   const m = req.method;
+  if (parts[0] === 'shop') {                              // the React shop, built into web/dist
+    const asset = extname(url.pathname) ? parts.slice(1).join('/') : 'index.html';   // a page? the router decides
+    return sendFile(res, '/web/dist/' + asset);
+  }
   if (parts[0] !== 'api') return sendFile(res, url.pathname);
   if (cors(req, res)) return;
   if (url.pathname === '/api/stats') {                    // how many requests reached the server

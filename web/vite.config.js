@@ -2,7 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/shop/' : '/',      // built files live under /shop/ on the shop server
   plugins: [react()],
   server: {
     port: 5180, strictPort: true,                 // busy? stop, never move
@@ -12,4 +13,4 @@ export default defineConfig({
     environment: 'jsdom',                         // a browser made of JavaScript, inside Node
     setupFiles: './src/test/setup.js',
   },
-})
+}))
