@@ -4,7 +4,7 @@ import { useCart } from '../useCart.js'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
-import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import { useLocalStorage } from '../hooks/useLocalStorage.ts'
 import { STORAGE } from '../storage.ts'
 import CartPanel from './CartPanel.jsx'
 

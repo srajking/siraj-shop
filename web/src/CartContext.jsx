@@ -1,6 +1,6 @@
 // CartContext.jsx — the provider: the cart and its dispatch, for every component below it
 import { cartReducer } from './cartReducer.ts'
-import { useLocalReducer } from './hooks/useLocalStorage.js'
+import { useLocalReducer } from './hooks/useLocalStorage.ts'
 import { CartContext } from './useCart.js'
 import { STORAGE } from './storage.ts'
 
