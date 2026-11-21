@@ -5,6 +5,7 @@ import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
+import { STORAGE } from '../storage.ts'
 import CartPanel from './CartPanel.jsx'
 
 export default function Header() {
@@ -12,7 +13,7 @@ export default function Header() {
   const count = cartCount(cart, products)                    // only products that exist
   const total = cartTotal(cart, products)
 
-  const [dark, setDark] = useLocalStorage('dark', false)       // remembered under 'dark'
+  const [dark, setDark] = useLocalStorage(STORAGE.dark, false)  // 'siraj-shop:dark'
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
   }, [dark])
