@@ -2,14 +2,15 @@ import { useEffect } from 'react'
 import s from './Header.module.css'
 import { useCart } from '../useCart.js'
 import { iqd } from '../money.ts'
+import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.js'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import CartPanel from './CartPanel.jsx'
 
 export default function Header() {
   const { cart, dispatch } = useCart()
-  const count = Object.values(cart).reduce((s, q) => s + q, 0)
-  const total = products.reduce((s, p) => s + (cart[p.id] ?? 0) * p.price, 0)
+  const count = cartCount(cart, products)                    // only products that exist
+  const total = cartTotal(cart, products)
 
   const [dark, setDark] = useLocalStorage('dark', false)       // remembered under 'dark'
   useEffect(() => {
