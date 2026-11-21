@@ -2,7 +2,7 @@ name: Shop checks
 
 on:
   push:
-    branches: [main, react]
+    branches: [main, react, typescript]
   pull_request:
 
 jobs:
@@ -49,6 +49,8 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - name: Types                               # vite build does not check them — tsc does
+        run: npm run typecheck
       - name: Lint
         run: npm run lint
       - name: Tests
