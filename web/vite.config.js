@@ -8,4 +8,8 @@ export default defineConfig({
     port: 5180, strictPort: true,                 // busy? stop, never move
     proxy: { '/api': 'http://localhost:4000' },   // npm run api — the shop server
   },
+  test: {
+    environment: 'jsdom',                         // a browser made of JavaScript, inside Node
+    setupFiles: './src/test/setup.js',
+  },
 })
