@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import s from './Header.module.css'
-import { useCart } from '../CartContext.jsx'
+import { useCart } from '../useCart.js'
 import { products } from '../products.js'
 import { useLocalStorage } from '../hooks/useLocalStorage.js'
 import CartPanel from './CartPanel.jsx'
@@ -23,11 +23,11 @@ export default function Header() {
     <header className={s.header}>
       <h1 className={s.title}>متجر سراج</h1>
       <p>دفاتر واقلام وحقائب</p>
-      <p className={s.cart} id="cart">
+      <div className={s.cart} id="cart">          {/* a div: the dialog and its heading cannot live in a <p> */}
         السلة: <b id="count">{count}</b> — <bdi lang="en">{iqd(total)}</bdi>
         {count > 0 && <button onClick={() => dispatch({ type: 'cleared' })}>افرغ السلة</button>}
         <CartPanel />
-      </p>
+      </div>
       <button onClick={() => setDark(!dark)}>{dark ? 'الوضع الفاتح' : 'الوضع الداكن'}</button>
     </header>
   )

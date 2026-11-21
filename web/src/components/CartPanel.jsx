@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import s from './CartPanel.module.css'
-import { useCart } from '../CartContext.jsx'
+import { useCart } from '../useCart.js'
 import { products } from '../products.js'
 
 export default function CartPanel() {

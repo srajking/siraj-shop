@@ -6,7 +6,7 @@ export default function SearchBox() {
   const [results, setResults] = useState([])
 
   useEffect(() => {
-    if (!q.trim()) return setResults([])
+    if (!q.trim()) return                         // nothing to ask
     const controller = new AbortController()
     const timer = setTimeout(() => {              // ask only after typing pauses
       fetch('/api/products?q=' + encodeURIComponent(q), { signal: controller.signal })
@@ -19,13 +19,14 @@ export default function SearchBox() {
       controller.abort()
     }
   }, [q])
+  const shown = q.trim() ? results : []           // an empty box shows nothing — derived, no setState
 
   return (
     <search className={s.box}>
       <label>
         ابحث في المتجر <input type="search" value={q} onChange={e => setQ(e.target.value)} />
       </label>
-      {q && <p role="status">{results.length} نتيجة: {results.map(p => p.name).join('، ')}</p>}
+      {q && <p role="status">{shown.length} نتيجة: {shown.map(p => p.name).join('، ')}</p>}
     </search>
   )
 }

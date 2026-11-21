@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import s from './ProductCard.module.css'
-import { useCart } from '../CartContext.jsx'
+import { useCart } from '../useCart.js'
 
 function iqd(n) {
   return n.toLocaleString('en-US') + ' IQD'
