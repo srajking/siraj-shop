@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { CartProvider } from '../CartContext.jsx'
-import ProductCard from './ProductCard.jsx'
+import ProductCard from './ProductCard.tsx'
 import { products } from '../products.ts'
 
 const bag = products.find(p => p.name === 'حقيبة ظهر')     // stock: 3

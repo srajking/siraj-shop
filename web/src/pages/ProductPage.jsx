@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router'
-import ProductCard from '../components/ProductCard.jsx'
+import ProductCard from '../components/ProductCard.tsx'
 import NotFound from './NotFound.jsx'
 import { products } from '../products.ts'
 

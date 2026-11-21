@@ -2,8 +2,13 @@ import { Link } from 'react-router'
 import s from './ProductCard.module.css'
 import { useCart } from '../useCart.js'
 import { iqd } from '../money.ts'
+import type { Product } from '../types.ts'
 
-export default function ProductCard({ product }) {
+interface Props {
+  product: Product                                             // a whole product — not a search hit
+}
+
+export default function ProductCard({ product }: Props) {
   const { cart, dispatch } = useCart()
   const qty = cart[product.id] ?? 0
   const out = product.stock === 0

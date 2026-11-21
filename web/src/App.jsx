@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Routes, Route, Outlet, useLocation } from 'react-router'
 import Header from './components/Header.jsx'
-import ProductList from './components/ProductList.jsx'
+import ProductList from './components/ProductList.tsx'
 import Reviews from './components/Reviews.jsx'
 import SearchBox from './components/SearchBox.jsx'
 import ProductPage from './pages/ProductPage.jsx'

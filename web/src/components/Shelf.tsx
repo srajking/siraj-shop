@@ -1,7 +1,13 @@
-import ProductCard from './ProductCard.jsx'
+import ProductCard from './ProductCard.tsx'
 import s from './ProductList.module.css'
+import type { Product } from '../types.ts'
 
-export default function Shelf({ title, products }) {
+interface ShelfProps {
+  title: string
+  products: Product[]
+}
+
+export default function Shelf({ title, products }: ShelfProps) {
   return (
     <>
       <h2>{title}</h2>
