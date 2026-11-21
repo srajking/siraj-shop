@@ -11,7 +11,8 @@ export default function ProductPage() {
 
   return (
     <section>
-      <h2>{product.name}</h2>
+      <title>{product.name + ' — متجر سراج'}</title>
+      <h2 data-page-title tabIndex={-1}>{product.name}</h2>
       <ProductCard product={product} />
       <h3>منتجات اخرى</h3>
       <ul>
