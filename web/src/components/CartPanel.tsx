@@ -4,7 +4,7 @@ import { useCart } from '../useCart.ts'
 import { products } from '../products.ts'
 
 export default function CartPanel() {
-  const { cart } = useCart()
+  const cart = useCart()
   const dialogRef = useRef<HTMLDialogElement>(null)       // the real <dialog>, null before the first render
   const items = products.filter(p => cart[p.id])
 

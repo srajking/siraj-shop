@@ -1,5 +1,5 @@
 import s from './Header.module.css'
-import { useCart } from '../useCart.ts'
+import { useCart, useCartDispatch } from '../useCart.ts'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
@@ -7,7 +7,8 @@ import CartPanel from './CartPanel.tsx'
 import ThemeToggle from './ThemeToggle.tsx'
 
 export default function Header() {
-  const { cart, dispatch } = useCart()
+  const cart = useCart()
+  const dispatch = useCartDispatch()
   const count = cartCount(cart, products)                    // only products that exist
   const total = cartTotal(cart, products)
 

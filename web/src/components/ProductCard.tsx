@@ -1,16 +1,17 @@
+import { memo } from 'react'
 import { Link } from 'react-router'
 import s from './ProductCard.module.css'
-import { useCart } from '../useCart.ts'
+import { useCartDispatch } from '../useCart.ts'
 import { iqd } from '../money.ts'
 import type { Product } from '../types.ts'
 
 interface Props {
   product: Product                                             // a whole product — not a search hit
+  qty: number                                                  // how many in the cart, from the parent
 }
 
-export default function ProductCard({ product }: Props) {
-  const { cart, dispatch } = useCart()
-  const qty = cart[product.id] ?? 0
+export default memo(function ProductCard({ product, qty }: Props) {   // same props → no redraw
+  const dispatch = useCartDispatch()
   const out = product.stock === 0
 
   return (
@@ -28,4 +29,4 @@ export default function ProductCard({ product }: Props) {
       </div>
     </article>
   )
-}
+})

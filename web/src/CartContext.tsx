@@ -1,12 +1,16 @@
-// CartContext.tsx — the provider: the cart and its dispatch, for every component below it
+// CartContext.tsx — the provider: the cart and its dispatch, each in its own context
 import type { ReactNode } from 'react'
 import { cartReducer } from './cartReducer.ts'
 import { useLocalReducer } from './hooks/useLocalStorage.ts'
-import { CartContext } from './useCart.ts'
+import { CartContext, CartDispatchContext } from './useCart.ts'
 import { STORAGE } from './storage.ts'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, dispatch] = useLocalReducer(STORAGE.cart, cartReducer, {})   // { productId: qty }
 
-  return <CartContext value={{ cart, dispatch }}>{children}</CartContext>
+  return (
+    <CartDispatchContext value={dispatch}>                 {/* the same function on every render */}
+      <CartContext value={cart}>{children}</CartContext>
+    </CartDispatchContext>
+  )
 }

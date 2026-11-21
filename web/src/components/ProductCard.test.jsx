@@ -3,14 +3,14 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { CartProvider } from '../CartContext.tsx'
-import ProductCard from './ProductCard.tsx'
+import Shelf from './Shelf.tsx'
 import { products } from '../products.ts'
 
 const bag = products.find(p => p.name === 'حقيبة ظهر')     // stock: 3
 const pen = products.find(p => p.name === 'قلم حبر')       // stock: 0
 
-function show(product) {                          // the card needs a router and a cart around it
-  render(<MemoryRouter><CartProvider><ProductCard product={product} /></CartProvider></MemoryRouter>)
+function show(product) {                          // the card, on a shelf, with a router and a cart around it
+  render(<MemoryRouter><CartProvider><Shelf title="" products={[product]} /></CartProvider></MemoryRouter>)
 }
 
 test('shows the name as a link to its page', () => {
