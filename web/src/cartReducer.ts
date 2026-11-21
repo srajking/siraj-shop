@@ -1,17 +1,27 @@
-// cartReducer.js — every rule of the cart, in one pure function
-export function cartReducer(cart, action) {
+// cartReducer.ts — every rule of the cart, in one pure function
+function missing(field: string): never {                       // never returns
+  throw Error('cart action is missing ' + field)
+}
+
+export function cartReducer(
+  cart: { [id: number]: number },                              // productId → qty
+  action: { type: string; id?: number; n?: number; stock?: number },
+): { [id: number]: number } {
   switch (action.type) {
     case 'added': {
-      const q = Math.min((cart[action.id] ?? 0) + action.n, action.stock)
-      return { ...cart, [action.id]: q }
+      const id = action.id ?? missing('id')
+      const n = action.n ?? missing('n')
+      const stock = action.stock ?? missing('stock')
+      return { ...cart, [id]: Math.min((cart[id] ?? 0) + n, stock) }
     }
     case 'decreased': {
-      const q = (cart[action.id] ?? 0) - 1
+      const id = action.id ?? missing('id')
+      const q = (cart[id] ?? 0) - 1
       if (q <= 0) {
-        const { [action.id]: _, ...rest } = cart
+        const { [id]: _, ...rest } = cart
         return rest
       }
-      return { ...cart, [action.id]: q }
+      return { ...cart, [id]: q }
     }
     case 'cleared':
       return {}
