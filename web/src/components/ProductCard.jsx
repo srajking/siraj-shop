@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import s from './ProductCard.module.css'
 import { useCart } from '../CartContext.jsx'
 
@@ -13,7 +14,7 @@ export default function ProductCard({ product }) {
   return (
     <article className={out ? `${s.card} ${s.out}` : s.card}>
       <img src={`/img/${product.img}-400.jpg`} alt={product.alt} width={240} height={180} />
-      <h3>{product.name}</h3>
+      <h3><Link to={`/products/${product.id}`}>{product.name}</Link></h3>
       <p>{product.desc}</p>
       <p className={s.price}><bdi lang="en">{iqd(product.price)}</bdi></p>
       {out ? <p>نفد</p> : <p>متوفر: {product.stock}</p>}
