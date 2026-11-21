@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react'
 import s from './SearchBox.module.css'
+import { getJson, HttpError } from '../api.ts'
 
 export default function SearchBox() {
   const [q, setQ] = useState('')
   const [results, setResults] = useState([])
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     if (!q.trim()) return                         // nothing to ask
     const controller = new AbortController()
     const timer = setTimeout(() => {              // ask only after typing pauses
-      fetch('/api/products?q=' + encodeURIComponent(q), { signal: controller.signal })
-        .then(res => res.json())
-        .then(data => setResults(data))
-        .catch(e => { if (e.name !== 'AbortError') throw e })
+      getJson('/api/products?q=' + encodeURIComponent(q), controller.signal)
+        .then(data => { setResults(data); setFailed(false) })
+        .catch(e => {
+          if (e.name === 'AbortError') return
+          if (e instanceof HttpError) return setFailed(true)     // the server said no
+          throw e
+        })
     }, 300)
     return () => {                                // a newer q: cancel the wait and the old answer
       clearTimeout(timer)
@@ -26,7 +31,9 @@ export default function SearchBox() {
       <label>
         ابحث في المتجر <input type="search" value={q} onChange={e => setQ(e.target.value)} />
       </label>
-      {q && <p role="status">{shown.length} نتيجة: {shown.map(p => p.name).join('، ')}</p>}
+      {q && (failed
+        ? <p role="status">البحث غير متاح الآن</p>
+        : <p role="status">{shown.length} نتيجة: {shown.map(p => p.name).join('، ')}</p>)}
     </search>
   )
 }
