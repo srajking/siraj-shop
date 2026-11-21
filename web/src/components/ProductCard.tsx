@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import s from './ProductCard.module.css'
-import { useCart } from '../useCart.js'
+import { useCart } from '../useCart.ts'
 import { iqd } from '../money.ts'
 import type { Product } from '../types.ts'
 

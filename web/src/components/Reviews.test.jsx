@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axe from 'axe-core'
-import Reviews from './Reviews.jsx'
+import Reviews from './Reviews.tsx'
 
 test('an empty review: the error is announced and focus goes to the first field', async () => {
   const user = userEvent.setup()

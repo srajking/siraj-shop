@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import s from './Header.module.css'
-import { useCart } from '../useCart.js'
+import { useCart } from '../useCart.ts'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'

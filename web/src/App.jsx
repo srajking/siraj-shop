@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react'
 import { Routes, Route, Outlet, useLocation } from 'react-router'
 import Header from './components/Header.jsx'
 import ProductList from './components/ProductList.tsx'
-import Reviews from './components/Reviews.jsx'
+import Reviews from './components/Reviews.tsx'
 import SearchBox from './components/SearchBox.jsx'
 import ProductPage from './pages/ProductPage.jsx'
 import NotFound from './pages/NotFound.jsx'
-import { CartProvider } from './CartContext.jsx'
+import { CartProvider } from './CartContext.tsx'
 import { products } from './products.ts'
 
 function Layout() {

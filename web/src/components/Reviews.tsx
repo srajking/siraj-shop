@@ -1,31 +1,40 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FormEvent } from 'react'
 import s from './Reviews.module.css'
 
-const empty = { name: '', stars: '5', text: '' }
+interface Review { id: number; name: string; stars: number; text: string }
+interface ReviewForm { name: string; stars: string; text: string }       // what the fields hold: text
+type Errors = { [K in keyof ReviewForm]?: string }                       // one message per field, maybe
+type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+
+const empty: ReviewForm = { name: '', stars: '5', text: '' }
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [form, setForm] = useState(empty)
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Errors>({})
 
-  const change = e => setForm({ ...form, [e.target.name]: e.target.value })
+  const change = (e: ChangeEvent<Field>) => setForm({ ...form, [e.target.name]: e.target.value })
   const total = reviews.reduce((sum, r) => sum + r.stars, 0)
   const average = reviews.length ? (total / reviews.length).toFixed(1) : '—'
 
-  function handleSubmit(e) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const next = {}
+    const next: Errors = {}
     if (!form.name.trim()) next.name = 'اكتب اسمك'
     if (form.text.trim().length < 5) next.text = 'اكتب 5 احرف على الاقل'
     setErrors(next)
     const first = Object.keys(next)[0]
-    if (first) return e.currentTarget.elements[first].focus()
+    if (first) {
+      const field = e.currentTarget.elements.namedItem(first)
+      if (field instanceof HTMLElement) field.focus()                  // namedItem may be a list, or null
+      return
+    }
     setReviews([...reviews, { id: reviews.length + 1, ...form, stars: Number(form.stars) }])
     setForm(empty)
   }
 
-  const err = key => errors[key] && <p id={key + '-err'} className={s.err}>{errors[key]}</p>
-  const aria = key => ({ 'aria-invalid': errors[key] ? true : undefined, 'aria-describedby': errors[key] ? key + '-err' : undefined })
+  const err = (key: keyof ReviewForm) => errors[key] && <p id={key + '-err'} className={s.err}>{errors[key]}</p>
+  const aria = (key: keyof ReviewForm) => ({ 'aria-invalid': errors[key] ? true : undefined, 'aria-describedby': errors[key] ? key + '-err' : undefined })
 
   return (
     <section className={s.box} aria-labelledby="rev-title">
