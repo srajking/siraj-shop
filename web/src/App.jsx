@@ -15,7 +15,8 @@ function Layout() {
   useEffect(() => {                                      // a NEW page: move focus to its heading
     if (last.current === pathname) return                // first load (and StrictMode's 2nd run)
     last.current = pathname
-    document.querySelector('[data-page-title]')?.focus()
+    const title = document.querySelector('[data-page-title]')  // Element | null
+    if (title instanceof HTMLElement) title.focus()              // only an HTMLElement has focus()
   }, [pathname])
 
   return (

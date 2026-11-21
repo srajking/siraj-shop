@@ -1,7 +1,7 @@
 // cartReducer.ts — every rule of the cart, in one pure function
 import type { Cart, CartAction } from './types.ts'
 
-function missing(field: string): never {                       // never returns
+function missing(field: string): never {                       // for .jsx callers, not checked yet
   throw Error('cart action is missing ' + field)
 }
 
@@ -27,7 +27,9 @@ export function cartReducer(
     }
     case 'cleared':
       return {}
-    default:
-      throw Error('Unknown action: ' + action.type)
+    default: {
+      const unknown: never = action                            // a new type stops the build here
+      throw Error('Unknown action: ' + (unknown as CartAction).type)
+    }
   }
 }

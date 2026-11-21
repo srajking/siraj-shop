@@ -11,9 +11,7 @@ export interface Product {
 
 export type Cart = { [id: number]: number }                    // productId → qty
 
-export interface CartAction {
-  type: string
-  id?: number
-  n?: number
-  stock?: number
-}
+export type CartAction =                                       // one shape per type
+  | { type: 'added'; id: number; n: number; stock: number }
+  | { type: 'decreased'; id: number }
+  | { type: 'cleared' }
