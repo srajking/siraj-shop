@@ -1,7 +1,7 @@
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 .card img { width: 100%; height: auto; border-radius: 8px; }
 .price { font-weight: 700; color: var(--accent); }
-.out { opacity: .5; }
+.out img { opacity: .5; filter: grayscale(1); }   /* dim the photo, keep the text readable */
 .buy { display: flex; gap: 8px; align-items: center; }
 .buy button { font: inherit; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--accent); background: none; color: var(--accent); cursor: pointer; }
 .buy button:disabled { opacity: .4; cursor: default; }

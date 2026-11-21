@@ -10,6 +10,7 @@
 - A reviews form whose errors are announced and focused
 - `npm test` in `web/`: Vitest and Testing Library; CI lints, tests and builds `web/` on every push
 - The shop server serves the built shop at `/shop/` (run `npm run build` in `web/` first)
+- Sold-out cards dim only the photo, so their text passes AA contrast
 
 ## 5.0.0 — the shop for every customer
 
