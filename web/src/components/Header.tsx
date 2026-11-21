@@ -1,22 +1,15 @@
-import { useEffect } from 'react'
 import s from './Header.module.css'
 import { useCart } from '../useCart.ts'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
-import { useLocalStorage } from '../hooks/useLocalStorage.ts'
-import { STORAGE } from '../storage.ts'
 import CartPanel from './CartPanel.tsx'
+import ThemeToggle from './ThemeToggle.tsx'
 
 export default function Header() {
   const { cart, dispatch } = useCart()
   const count = cartCount(cart, products)                    // only products that exist
   const total = cartTotal(cart, products)
-
-  const [dark, setDark] = useLocalStorage(STORAGE.dark, false)  // 'siraj-shop:dark'
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-  }, [dark])
 
   return (
     <header className={s.header}>
@@ -27,7 +20,7 @@ export default function Header() {
         {count > 0 && <button onClick={() => dispatch({ type: 'cleared' })}>افرغ السلة</button>}
         <CartPanel />
       </div>
-      <button onClick={() => setDark(!dark)}>{dark ? 'الوضع الفاتح' : 'الوضع الداكن'}</button>
+      <ThemeToggle />                                 {/* owns dark: the header does not */}
     </header>
   )
 }
