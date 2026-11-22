@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import s from './CartPanel.module.css'
-import { useCart } from '../useCart.ts'
+import { useCart } from '../cartStore.ts'
 import { products } from '../products.ts'
 
 export default function CartPanel() {
-  const cart = useCart()
+  const cart = useCart(cart => cart)
   const dialogRef = useRef<HTMLDialogElement>(null)       // the real <dialog>, null before the first render
   const items = products.filter(p => cart[p.id])
 

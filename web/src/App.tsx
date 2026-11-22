@@ -6,7 +6,6 @@ import Reviews from './components/Reviews.tsx'
 import SearchBox from './components/SearchBox.tsx'
 import ProductPage from './pages/ProductPage.tsx'
 import NotFound from './pages/NotFound.tsx'
-import { CartProvider } from './CartContext.tsx'
 import { products } from './products.ts'
 
 function Layout() {
@@ -41,14 +40,12 @@ function Home() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/products/:id" element={<ProductPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </CartProvider>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/products/:id" element={<ProductPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   )
 }

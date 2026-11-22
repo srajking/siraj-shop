@@ -1,5 +1,5 @@
 import s from './Header.module.css'
-import { useCart, useCartDispatch } from '../useCart.ts'
+import { useCart, dispatch } from '../cartStore.ts'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
@@ -7,10 +7,8 @@ import CartPanel from './CartPanel.tsx'
 import ThemeToggle from './ThemeToggle.tsx'
 
 export default function Header() {
-  const cart = useCart()
-  const dispatch = useCartDispatch()
-  const count = cartCount(cart, products)                    // only products that exist
-  const total = cartTotal(cart, products)
+  const count = useCart(cart => cartCount(cart, products))     // a number: same number → no redraw
+  const total = useCart(cart => cartTotal(cart, products))
 
   return (
     <header className={s.header}>
