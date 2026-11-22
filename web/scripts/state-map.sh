@@ -7,3 +7,7 @@ echo "cart   owner: $(grep -rlE 'create<Cart' --include=*.ts . | sed 's|^\./||')
 echo "cart   reads: $(files 'useCart\(')"
 echo "dark   owner: $(files 'STORAGE.dark')"
 echo "search owner: $(files "useState\(''\)|useSearchParams\(\)")"
+owners=$(grep -rlE "useState[<(]|useSearchParams\(|= create(Store)?<|useLocalStorage\(STORAGE" --include=*.tsx --include=*.ts . | grep -v -e test -e '^./hooks/' | sed 's|^\./||' | sort)
+doc=../docs/STATE.md; missing=""; n=0; total=0
+for f in $owners; do total=$((total+1)); if [ -f $doc ] && grep -q "$f" $doc; then n=$((n+1)); else missing="$missing $f"; fi; done
+echo "documented in docs/STATE.md: $n/$total${missing:+ · missing:$missing}"
