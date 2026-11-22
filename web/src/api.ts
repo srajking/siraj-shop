@@ -27,3 +27,11 @@ export async function getJson<T>(
   if (!check(data)) throw new DataError(url)                   // checked, not trusted
   return data
 }
+
+export async function postJson<T>(url: string, body: unknown, check: (data: unknown) => data is T): Promise<T> {
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+  if (!res.ok) throw new HttpError(res.status, url)            // refused: an error, not data
+  const data: unknown = await res.json()
+  if (!check(data)) throw new DataError(url)
+  return data
+}

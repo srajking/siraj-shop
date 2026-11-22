@@ -419,7 +419,7 @@ const server = createServer(async (req, res) => {
     if (m !== 'POST') return allow(res, ['GET', 'POST']);
     const body = await readJson(req, res); if (!body) return;
     if (!Number.isInteger(body.stars) || body.stars < 1 || body.stars > 5) return send(res, 422, { error: 'stars must be 1 to 5', stars: body.stars ?? null });
-    const review = { id: reviews.length + 1, productId: id, stars: body.stars, text: String(body.text ?? '') };
+    const review = { id: reviews.length + 1, productId: id, name: String(body.name ?? ''), stars: body.stars, text: String(body.text ?? '') };
     reviews.push(review);
     return send(res, 201, review, { Location: `/api/products/${id}/reviews/${review.id}` });
   }

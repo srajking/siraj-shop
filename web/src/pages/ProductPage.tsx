@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router'
 import ProductCard from '../components/ProductCard.tsx'
 import NotFound from './NotFound.tsx'
+import Reviews from '../components/Reviews.tsx'
 import { products } from '../products.ts'
 
 export default function ProductPage() {
@@ -18,6 +19,7 @@ export default function ProductPage() {
       <ul>
         {others.map(p => <li key={p.id}><Link to={`/products/${p.id}`}>{p.name}</Link></li>)}
       </ul>
+      <Reviews productId={product.id} />
       <p><Link to="/">كل المنتجات</Link></p>
     </section>
   )

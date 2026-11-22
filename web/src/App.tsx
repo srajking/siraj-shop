@@ -4,7 +4,6 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './queryClient.ts'
 import Header from './components/Header.tsx'
 import ProductList from './components/ProductList.tsx'
-import Reviews from './components/Reviews.tsx'
 import SearchBox from './components/SearchBox.tsx'
 import ProductPage from './pages/ProductPage.tsx'
 import NotFound from './pages/NotFound.tsx'
@@ -35,7 +34,6 @@ function Home() {
       <h2 data-page-title tabIndex={-1}>كل المنتجات</h2>
       <SearchBox />
       <ProductList products={products} />
-      <Reviews />
     </>
   )
 }

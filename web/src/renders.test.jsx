@@ -40,7 +40,7 @@ test('adding one product redraws its own card — not every card', async () => {
 
 test('typing a review redraws the form — not the reviews section', async () => {
   const user = userEvent.setup()
-  render(<MemoryRouter><App /></MemoryRouter>)
+  render(<MemoryRouter initialEntries={['/products/3']}><App /></MemoryRouter>)   // reviews live on a product page
   for (const k in renders) delete renders[k]
   await user.type(screen.getByRole('textbox', { name: 'الاسم' }), 'سراج')        // 4 keystrokes
   expect(renders.Reviews).toBeUndefined()
