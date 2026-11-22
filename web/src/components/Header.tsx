@@ -1,5 +1,6 @@
 import s from './Header.module.css'
 import { useCart, dispatch } from '../cartStore.ts'
+import { cleared } from '../cartSlice.ts'
 import { iqd } from '../money.ts'
 import { cartCount, cartTotal } from '../cartMath.ts'
 import { products } from '../products.ts'
@@ -16,7 +17,7 @@ export default function Header() {
       <p>دفاتر واقلام وحقائب</p>
       <div className={s.cart} id="cart">          {/* a div: the dialog and its heading cannot live in a <p> */}
         السلة: <b id="count">{count}</b> — <bdi lang="en">{iqd(total)}</bdi>
-        {count > 0 && <button onClick={() => dispatch({ type: 'cleared' })}>افرغ السلة</button>}
+        {count > 0 && <button onClick={() => dispatch(cleared())}>افرغ السلة</button>}
         <CartPanel />
       </div>
       <ThemeToggle />                                 {/* owns dark: the header does not */}

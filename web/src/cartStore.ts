@@ -1,13 +1,13 @@
 // cartStore.ts — the cart: typed state + actions, saved by persist under STORAGE.cart
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { cartReducer } from './cartReducer.ts'
+import { cartSlice, type CartAction } from './cartSlice.ts'
 import { STORAGE } from './storage.ts'
-import type { Cart, CartAction } from './types.ts'
+import type { Cart } from './types.ts'
 
 interface CartState {
   items: Cart                                                  // { productId: qty }
-  dispatch: (action: CartAction) => void                       // the same rules: cartReducer
+  dispatch: (action: CartAction) => void                       // the rules: cartSlice.reducer
 }
 
 const storage = createJSONStorage<Pick<CartState, 'items'>>(() => ({
@@ -22,7 +22,7 @@ const storage = createJSONStorage<Pick<CartState, 'items'>>(() => ({
 
 export const useCartStore = create<CartState>()(persist(set => ({
   items: {},
-  dispatch: action => set(s => ({ items: cartReducer(s.items, action) })),   // merges: items is one key
+  dispatch: action => set(s => ({ items: cartSlice.reducer(s.items, action) })),   // merges: items is one key
 }), { name: STORAGE.cart, storage, partialize: s => ({ items: s.items }) }))
 
 export const dispatch = (action: CartAction) => useCartStore.getState().dispatch(action)

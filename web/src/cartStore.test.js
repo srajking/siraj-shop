@@ -1,9 +1,10 @@
 import { test, expect, vi } from 'vitest'
 import { useCartStore, dispatch } from './cartStore.ts'
+import { added, decreased } from './cartSlice.ts'
 
 test('decreasing to zero removes the product from the cart', () => {
-  dispatch({ type: 'added', id: 3, n: 1, stock: 3 })
-  dispatch({ type: 'decreased', id: 3 })
+  dispatch(added({ id: 3, n: 1, stock: 3 }))
+  dispatch(decreased(3))
   expect(useCartStore.getState().items).toEqual({})
 })
 
