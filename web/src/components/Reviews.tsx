@@ -8,10 +8,18 @@ type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 
 const empty: ReviewForm = { name: '', stars: '5', text: '' }
 
+function validate(form: ReviewForm): Errors {                          // the form → its errors, nothing stored
+  const errors: Errors = {}
+  if (!form.name.trim()) errors.name = 'اكتب اسمك'
+  if (form.text.trim().length < 5) errors.text = 'اكتب 5 احرف على الاقل'
+  return errors
+}
+
 export default function Reviews() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [form, setForm] = useState(empty)
-  const [errors, setErrors] = useState<Errors>({})
+  const [tried, setTried] = useState(false)                            // pressed send at least once?
+  const errors = tried ? validate(form) : {}                           // derived: always matches the form
 
   const change = (e: ChangeEvent<Field>) => setForm({ ...form, [e.target.name]: e.target.value })
   const total = reviews.reduce((sum, r) => sum + r.stars, 0)
@@ -19,11 +27,8 @@ export default function Reviews() {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const next: Errors = {}
-    if (!form.name.trim()) next.name = 'اكتب اسمك'
-    if (form.text.trim().length < 5) next.text = 'اكتب 5 احرف على الاقل'
-    setErrors(next)
-    const first = Object.keys(next)[0]
+    setTried(true)
+    const first = Object.keys(validate(form))[0]
     if (first) {
       const field = e.currentTarget.elements.namedItem(first)
       if (field instanceof HTMLElement) field.focus()                  // namedItem may be a list, or null
@@ -31,6 +36,7 @@ export default function Reviews() {
     }
     setReviews([...reviews, { id: reviews.length + 1, ...form, stars: Number(form.stars) }])
     setForm(empty)
+    setTried(false)
   }
 
   const err = (key: keyof ReviewForm) => errors[key] && <p id={key + '-err'} className={s.err}>{errors[key]}</p>

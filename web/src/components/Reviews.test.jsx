@@ -19,3 +19,12 @@ test('axe finds no violations in the form', async () => {
   const { violations } = await axe.run(container)
   expect(violations.map(v => v.id)).toEqual([])
 })
+
+test('fixing a field removes its error — the message follows the form', async () => {
+  const user = userEvent.setup()
+  render(<Reviews />)
+  await user.click(screen.getByRole('button', { name: 'ارسل التقييم' }))   // empty: two errors
+  await user.type(screen.getByRole('textbox', { name: 'الاسم' }), 'سراج')
+  expect(screen.queryByText('اكتب اسمك')).toBeNull()                       // the name is fine now
+  expect(screen.getByText('اكتب 5 احرف على الاقل')).toBeInTheDocument()   // the text still is not
+})
