@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router'
 import s from './SearchBox.module.css'
 import { getJson, HttpError, DataError } from '../api.ts'
 import { isSearchHits, type SearchHit } from '../checks.ts'
 
 export default function SearchBox() {
-  const [q, setQ] = useState('')
+  const [params, setParams] = useSearchParams()
+  const q = params.get('q') ?? ''                 // the search lives in the address: shareable, survives reload
+  const setQ = (next: string) => setParams(next ? { q: next } : {}, { replace: true })   // typing adds no Back steps
   const [results, setResults] = useState<SearchHit[]>([])
   const [failed, setFailed] = useState(false)
 

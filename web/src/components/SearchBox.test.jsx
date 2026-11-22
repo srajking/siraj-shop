@@ -1,13 +1,16 @@
 import { test, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import SearchBox from './SearchBox.tsx'
+
+const show = (url = '/') => render(<MemoryRouter initialEntries={[url]}><SearchBox /></MemoryRouter>)
 
 test('asks the server once, after typing stops', async () => {
   const fetch = vi.fn(async () => ({ ok: true, json: async () => [{ id: 3, name: 'حقيبة ظهر' }] }))
   vi.stubGlobal('fetch', fetch)                   // no real server in a test
   const user = userEvent.setup()
-  render(<SearchBox />)
+  show()
 
   await user.type(screen.getByRole('searchbox', { name: 'ابحث في المتجر' }), 'حقيبة')
   expect(await screen.findByText('1 نتيجة: حقيبة ظهر')).toBeInTheDocument()   // waits up to 1s
@@ -19,7 +22,7 @@ test('asks the server once, after typing stops', async () => {
 test('a server error is a message, not a crash', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500, json: async () => ({ error: 'boom' }) })))
   const user = userEvent.setup()
-  render(<SearchBox />)
+  show()
 
   await user.type(screen.getByRole('searchbox', { name: 'ابحث في المتجر' }), 'حقيبة')
   expect(await screen.findByText('البحث غير متاح الآن')).toBeInTheDocument()
@@ -29,9 +32,18 @@ test('a server error is a message, not a crash', async () => {
 test('an answer in the wrong shape is a message, not a crash', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ items: [{ id: 3, name: 'حقيبة ظهر' }] }) })))
   const user = userEvent.setup()
-  render(<SearchBox />)
+  show()
 
   await user.type(screen.getByRole('searchbox', { name: 'ابحث في المتجر' }), 'حقيبة')
   expect(await screen.findByText('البحث غير متاح الآن')).toBeInTheDocument()
+  vi.unstubAllGlobals()
+})
+
+test('a shared link /?q= fills the box and searches at once', async () => {
+  const fetch = vi.fn(async () => ({ ok: true, json: async () => [{ id: 3, name: 'حقيبة ظهر' }] }))
+  vi.stubGlobal('fetch', fetch)
+  show('/?q=' + encodeURIComponent('حقيبة'))                    // a friend opens the link
+  expect(screen.getByRole('searchbox', { name: 'ابحث في المتجر' })).toHaveValue('حقيبة')
+  expect(await screen.findByText('1 نتيجة: حقيبة ظهر')).toBeInTheDocument()
   vi.unstubAllGlobals()
 })
