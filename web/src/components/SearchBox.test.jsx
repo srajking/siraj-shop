@@ -47,3 +47,19 @@ test('a shared link /?q= fills the box and searches at once', async () => {
   expect(await screen.findByText('1 نتيجة: حقيبة ظهر')).toBeInTheDocument()
   vi.unstubAllGlobals()
 })
+
+test('searching the same words again does not ask the server again', async () => {
+  const fetch = vi.fn(async () => ({ ok: true, json: async () => [{ id: 3, name: 'حقيبة ظهر' }] }))
+  vi.stubGlobal('fetch', fetch)
+  const user = userEvent.setup()
+  show()
+  const box = screen.getByRole('searchbox', { name: 'ابحث في المتجر' })
+  await user.type(box, 'حقيبة')
+  expect(await screen.findByText('1 نتيجة: حقيبة ظهر')).toBeInTheDocument()
+  await user.clear(box)
+  await user.type(box, 'حقيبة')                                  // the same question, a second time
+  expect(await screen.findByText('1 نتيجة: حقيبة ظهر')).toBeInTheDocument()
+  await new Promise(r => setTimeout(r, 400))                      // give a second request time to happen
+  expect(fetch).toHaveBeenCalledTimes(1)
+  vi.unstubAllGlobals()
+})

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import s from './SearchBox.module.css'
 import { getJson, HttpError, DataError } from '../api.ts'
 import { isSearchHits, type SearchHit } from '../checks.ts'
+import { freshHits, saveHits } from '../searchCache.ts'
 
 export default function SearchBox() {
   const [params, setParams] = useSearchParams()
@@ -12,11 +13,11 @@ export default function SearchBox() {
   const [failed, setFailed] = useState(false)
 
   useEffect(() => {
-    if (!q.trim()) return                         // nothing to ask
+    if (!q.trim() || freshHits(q)) return         // nothing to ask, or a fresh answer already here
     const controller = new AbortController()
     const timer = setTimeout(() => {              // ask only after typing pauses
       getJson('/api/products?q=' + encodeURIComponent(q), isSearchHits, controller.signal)
-        .then(data => { setResults(data); setFailed(false) })
+        .then(data => { saveHits(q, data); setResults(data); setFailed(false) })
         .catch(e => {
           if (e.name === 'AbortError') return
           if (e instanceof HttpError || e instanceof DataError) return setFailed(true)   // no, or nonsense
@@ -28,14 +29,14 @@ export default function SearchBox() {
       controller.abort()
     }
   }, [q])
-  const shown = q.trim() ? results : []           // an empty box shows nothing — derived, no setState
+  const shown = !q.trim() ? [] : freshHits(q) ?? results   // cached answer first — derived, no setState
 
   return (
     <search className={s.box}>
       <label>
         ابحث في المتجر <input type="search" value={q} onChange={e => setQ(e.target.value)} />
       </label>
-      {q && (failed
+      {q && (failed && !freshHits(q)                 // a cached answer beats an old failure
         ? <p role="status">البحث غير متاح الآن</p>
         : <p role="status">{shown.length} نتيجة: {shown.map(p => p.name).join('، ')}</p>)}
     </search>
