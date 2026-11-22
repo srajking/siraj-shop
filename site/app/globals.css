@@ -2,3 +2,6 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #f7f7f5; color
 main { max-width: 960px; margin: auto; padding: 24px; }
 .grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
 .grid li { background: #fff; border-radius: 12px; padding: 16px; }
+.top { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: #1d1d1f; }
+.top a { color: #fff; text-decoration: none; margin-inline-start: 16px; }
+.top .brand { font-weight: 700; margin: 0; }

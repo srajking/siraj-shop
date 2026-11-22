@@ -4,7 +4,7 @@ import products from "../../server/data/products.json";
 export default function Home() {
   return (
     <main>
-      <h1>Siraj Shop</h1>
+      <h1>Products</h1>
       <ul className="grid">
         {products.map((p) => (
           <li key={p.id}>
