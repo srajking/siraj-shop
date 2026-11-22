@@ -1,8 +1,11 @@
 // cartStore.ts — the cart: typed state + actions, saved by persist under STORAGE.cart
 import { create } from 'zustand'
+import { createSelector } from '@reduxjs/toolkit'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { cartSlice, type CartAction } from './cartSlice.ts'
 import { STORAGE } from './storage.ts'
+import { cartCount, cartTotal } from './cartMath.ts'
+import { products } from './products.ts'
 import type { Cart } from './types.ts'
 
 interface CartState {
@@ -26,4 +29,9 @@ export const useCartStore = create<CartState>()(persist(set => ({
 }), { name: STORAGE.cart, storage, partialize: s => ({ items: s.items }) }))
 
 export const dispatch = (action: CartAction) => useCartStore.getState().dispatch(action)
+// memoized: computed once per new cart, however many times React asks
+const selectItems = (s: CartState) => s.items
+export const selectCount = createSelector([selectItems], items => cartCount(items, products))
+export const selectTotal = createSelector([selectItems], items => cartTotal(items, products))
+
 export const useCart = <S,>(select: (cart: Cart) => S): S => useCartStore(s => select(s.items))
