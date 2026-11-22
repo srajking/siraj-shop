@@ -1,13 +1,29 @@
-// cartStore.ts — the cart in a Zustand store: the same reducer, saved under STORAGE.cart
+// cartStore.ts — the cart: typed state + actions, saved by persist under STORAGE.cart
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { cartReducer } from './cartReducer.ts'
 import { STORAGE } from './storage.ts'
 import type { Cart, CartAction } from './types.ts'
 
-const saved = localStorage.getItem(STORAGE.cart)
-export const useCart = create<Cart>()(() => (saved === null ? {} : JSON.parse(saved)))   // the hook IS the store
-useCart.subscribe(cart => localStorage.setItem(STORAGE.cart, JSON.stringify(cart)))
-
-export function dispatch(action: CartAction) {                 // the same rules, from anywhere
-  useCart.setState(cartReducer(useCart.getState(), action), true)   // true: replace — a removed id must go
+interface CartState {
+  items: Cart                                                  // { productId: qty }
+  dispatch: (action: CartAction) => void                       // the same rules: cartReducer
 }
+
+const storage = createJSONStorage<Pick<CartState, 'items'>>(() => ({
+  getItem: key => {
+    const raw = localStorage.getItem(key)
+    if (raw === null || 'state' in JSON.parse(raw)) return raw
+    return JSON.stringify({ state: { items: JSON.parse(raw) }, version: 0 })   // saved before persist: { id: qty }
+  },
+  setItem: (key, value) => localStorage.setItem(key, value),
+  removeItem: key => localStorage.removeItem(key),
+}))
+
+export const useCartStore = create<CartState>()(persist(set => ({
+  items: {},
+  dispatch: action => set(s => ({ items: cartReducer(s.items, action) })),   // merges: items is one key
+}), { name: STORAGE.cart, storage, partialize: s => ({ items: s.items }) }))
+
+export const dispatch = (action: CartAction) => useCartStore.getState().dispatch(action)
+export const useCart = <S,>(select: (cart: Cart) => S): S => useCartStore(s => select(s.items))
