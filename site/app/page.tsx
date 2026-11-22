@@ -1,3 +1,4 @@
+import Link from "next/link";
 import products from "../../server/data/products.json";
 
 // the home page — rendered on the server, so the products are in the HTML
@@ -8,7 +9,7 @@ export default function Home() {
       <ul className="grid">
         {products.map((p) => (
           <li key={p.id}>
-            <h3>{p.name}</h3>
+            <h3><Link href={`/products/${p.id}`}>{p.name}</Link></h3>
             <p>{p.price.toLocaleString("en")} IQD</p>
           </li>
         ))}
