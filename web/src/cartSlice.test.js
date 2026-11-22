@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { cartSlice, added, decreased } from './cartSlice.ts'
+import { cartSlice, added, decreased, cleared } from './cartSlice.ts'
 
 const reduce = cartSlice.reducer
 describe('cartSlice', () => {
@@ -10,6 +10,12 @@ describe('cartSlice', () => {
   })
   test('decreasing the last one removes the product', () => {
     expect(reduce({ 3: 1 }, decreased(3))).toEqual({})
+  })
+  test('decreasing one of many leaves the rest', () => {
+    expect(reduce({ 3: 2 }, decreased(3))).toEqual({ 3: 1 })
+  })
+  test('cleared empties the cart', () => {
+    expect(reduce({ 1: 2, 3: 1 }, cleared())).toEqual({})
   })
   test('the old cart is never changed', () => {
     const before = { 3: 1 }

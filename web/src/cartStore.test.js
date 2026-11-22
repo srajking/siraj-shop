@@ -14,3 +14,10 @@ test('a cart saved before persist ({ id: qty }) still loads', async () => {
   const { useCartStore: fresh } = await import('./cartStore.ts')
   expect(fresh.getState().items).toEqual({ 3: 2 })
 })
+
+test('clearing the saved cart removes its key from localStorage', async () => {
+  dispatch(added({ id: 3, n: 1, stock: 3 }))
+  expect(localStorage.getItem('siraj-shop:cart')).not.toBeNull()
+  await useCartStore.persist.clearStorage()
+  expect(localStorage.getItem('siraj-shop:cart')).toBeNull()
+})
