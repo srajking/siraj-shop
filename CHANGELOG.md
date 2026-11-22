@@ -1,5 +1,17 @@
 # Changelog
 
+## 8.0.0 — state in the right place
+
+- Every piece of state has one owner, written down in `web/docs/STATE.md`; `npm run state-map` counts them and checks the document
+- Cart: a Zustand store (`cartStore.ts`) with rules in an RTK slice (`cartSlice.ts`); each component selects only what it shows — one add redraws one card, not every card and shelf
+- Cart count and total are memoized selectors: one click computes them once, not four times
+- The cart is saved by `persist` with a version, carts saved by 7.x still load, a broken save starts empty, and every open tab shows the same cart
+- Search lives in the URL (`?q=`): shareable, kept after a reload, Back works; answers come from TanStack Query (one cache, a minute fresh, no retries for a 500 or a wrong shape)
+- Reviews live on the server, per product page: a new review shows at once, stays after a reload, and is taken back with a message if the server refuses (the server now keeps the reviewer's name)
+- Smaller redraws: the theme button and the review form own their state; typing a review no longer redraws the reviews
+- Tests: 33 (from 13 in 7.0.0); `npm run test:state` covers 100% of the lines of the state files; CI runs it on the `state` branch
+- Cost, measured: the built JavaScript is 102.6 kB gzip, up from 84.2 kB in 7.0.0 (Zustand, Redux Toolkit for the slice and selectors, TanStack Query)
+
 ## 7.0.0 — the shop in TypeScript
 
 - Every source file in `web/src` is TypeScript: `npm run typecheck` reports 0 errors with `strict` on (it started at 44)
