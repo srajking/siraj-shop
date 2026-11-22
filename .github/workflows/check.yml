@@ -2,7 +2,7 @@ name: Shop checks
 
 on:
   push:
-    branches: [main, react, typescript]
+    branches: [main, react, typescript, state]
   pull_request:
 
 jobs:
@@ -55,5 +55,7 @@ jobs:
         run: npm run lint
       - name: Tests
         run: npm test
+      - name: State coverage                      # every state file: which lines no test ran
+        run: npm run test:state
       - name: Build
         run: npm run build
