@@ -1,42 +1,30 @@
-import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import s from './SearchBox.module.css'
-import { getJson, HttpError, DataError } from '../api.ts'
-import { isSearchHits, type SearchHit } from '../checks.ts'
-import { freshHits, saveHits } from '../searchCache.ts'
+import { getJson } from '../api.ts'
+import { isSearchHits } from '../checks.ts'
+import { useDebounced } from '../hooks/useDebounced.ts'
 
 export default function SearchBox() {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''                 // the search lives in the address: shareable, survives reload
   const setQ = (next: string) => setParams(next ? { q: next } : {}, { replace: true })   // typing adds no Back steps
-  const [results, setResults] = useState<SearchHit[]>([])
-  const [failed, setFailed] = useState(false)
+  const asked = useDebounced(q.trim(), 300)       // ask only after typing pauses
 
-  useEffect(() => {
-    if (!q.trim() || freshHits(q)) return         // nothing to ask, or a fresh answer already here
-    const controller = new AbortController()
-    const timer = setTimeout(() => {              // ask only after typing pauses
-      getJson('/api/products?q=' + encodeURIComponent(q), isSearchHits, controller.signal)
-        .then(data => { saveHits(q, data); setResults(data); setFailed(false) })
-        .catch(e => {
-          if (e.name === 'AbortError') return
-          if (e instanceof HttpError || e instanceof DataError) return setFailed(true)   // no, or nonsense
-          throw e
-        })
-    }, 300)
-    return () => {                                // a newer q: cancel the wait and the old answer
-      clearTimeout(timer)
-      controller.abort()
-    }
-  }, [q])
-  const shown = !q.trim() ? [] : freshHits(q) ?? results   // cached answer first — derived, no setState
+  const search = useQuery({                       // server state: cached by ['search', asked] (chapter 14)
+    queryKey: ['search', asked],
+    queryFn: ({ signal }) => getJson('/api/products?q=' + encodeURIComponent(asked), isSearchHits, signal),
+    enabled: asked !== '',                        // nothing to ask
+    placeholderData: keepPreviousData,            // keep the last answer while the next one loads
+  })
+  const shown = q.trim() ? search.data ?? [] : [] // an empty box shows nothing — derived, no setState
 
   return (
     <search className={s.box}>
       <label>
         ابحث في المتجر <input type="search" value={q} onChange={e => setQ(e.target.value)} />
       </label>
-      {q && (failed && !freshHits(q)                 // a cached answer beats an old failure
+      {q && (search.isError
         ? <p role="status">البحث غير متاح الآن</p>
         : <p role="status">{shown.length} نتيجة: {shown.map(p => p.name).join('، ')}</p>)}
     </search>

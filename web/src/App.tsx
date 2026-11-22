@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Routes, Route, Outlet, useLocation } from 'react-router'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './queryClient.ts'
 import Header from './components/Header.tsx'
 import ProductList from './components/ProductList.tsx'
 import Reviews from './components/Reviews.tsx'
@@ -40,12 +42,14 @@ function Home() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/products/:id" element={<ProductPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <QueryClientProvider client={queryClient}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/products/:id" element={<ProductPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </QueryClientProvider>
   )
 }

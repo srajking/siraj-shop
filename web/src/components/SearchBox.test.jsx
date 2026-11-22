@@ -2,9 +2,12 @@ import { test, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
+import { QueryClientProvider } from '@tanstack/react-query'
 import SearchBox from './SearchBox.tsx'
+import { queryClient } from '../queryClient.ts'
 
-const show = (url = '/') => render(<MemoryRouter initialEntries={[url]}><SearchBox /></MemoryRouter>)
+const show = (url = '/') => render(
+  <QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[url]}><SearchBox /></MemoryRouter></QueryClientProvider>)
 
 test('asks the server once, after typing stops', async () => {
   const fetch = vi.fn(async () => ({ ok: true, json: async () => [{ id: 3, name: 'حقيبة ظهر' }] }))

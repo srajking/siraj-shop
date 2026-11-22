@@ -3,11 +3,11 @@ import '@testing-library/jest-dom/vitest'          // toBeInTheDocument(), toHav
 import { afterEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { useCartStore } from '../cartStore.ts'
-import { clearSearchCache } from '../searchCache.ts'
+import { queryClient } from '../queryClient.ts'
 
 afterEach(() => {
   cleanup()                                        // remove what the test rendered
   localStorage.clear()
   useCartStore.setState({ items: {} })             // the cart starts empty in every test
-  clearSearchCache()
+  queryClient.clear()                              // and no cached server answers
 })
