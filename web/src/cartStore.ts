@@ -35,3 +35,8 @@ export const selectCount = createSelector([selectItems], items => cartCount(item
 export const selectTotal = createSelector([selectItems], items => cartTotal(items, products))
 
 export const useCart = <S,>(select: (cart: Cart) => S): S => useCartStore(s => select(s.items))
+
+// another tab saved a new cart: load it here too (the 'storage' event fires only in the OTHER tabs)
+window.addEventListener('storage', e => {
+  if (e.key === STORAGE.cart) void useCartStore.persist.rehydrate()
+})
