@@ -2,10 +2,10 @@
 import '@testing-library/jest-dom/vitest'          // toBeInTheDocument(), toHaveFocus(), toBeDisabled() …
 import { afterEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
-import { cartStore } from '../cartStore.ts'
+import { useCart } from '../cartStore.ts'
 
 afterEach(() => {
   cleanup()                                        // remove what the test rendered
   localStorage.clear()
-  cartStore.setState({})                           // the cart starts empty in every test
+  useCart.setState({}, true)                       // the cart starts empty in every test
 })
