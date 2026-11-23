@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getProduct, getProducts } from "@/lib/shop";
 import AddToCart from "./AddToCart";
 import Reviews from "./Reviews";
-import ReviewForm from "./ReviewForm";
+import ReviewArea from "./ReviewArea";
 
 // build these shells ahead of time — the reviews still stream in on every visit
 export async function generateStaticParams() {
@@ -25,7 +25,9 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]"
       <Suspense fallback={<p className="wait">Loading reviews…</p>}>
         <Reviews id={id} />
       </Suspense>
-      <ReviewForm productId={id} />
+      <Suspense fallback={null}>
+        <ReviewArea productId={id} />
+      </Suspense>
       <h3>More products</h3>
       <ul>
         {others.map((p) => (

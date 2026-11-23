@@ -2,6 +2,7 @@
 import { refresh } from "next/cache";
 import * as z from "zod";
 import { getProduct } from "@/lib/shop";
+import { getSession } from "@/lib/dal";
 
 const API = "http://localhost:4000/api";
 export type ReviewState = { error: string | null; sent: number };
@@ -14,6 +15,8 @@ const ReviewInput = z.object({
 });
 
 export async function sendReview(prev: ReviewState, formData: FormData): Promise<ReviewState> {
+  const session = await getSession(); // the action checks for itself: hiding the form is not enough
+  if (!session) return { ...prev, error: "Log in to write a review" };
   const input = ReviewInput.safeParse(Object.fromEntries(formData));
   if (!input.success) return { ...prev, error: input.error.issues[0].message };
   const { productId, stars, text } = input.data;
@@ -22,7 +25,7 @@ export async function sendReview(prev: ReviewState, formData: FormData): Promise
     const res = await fetch(`${API}/products/${productId}/reviews`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stars, text }),
+      body: JSON.stringify({ name: session.name, stars, text }), // the name comes from the session, not the form
     });
     if (!res.ok) throw new Error(`reviews API answered ${res.status}`);
   } catch (e) {
