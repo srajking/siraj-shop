@@ -10,7 +10,7 @@ export default function ReviewForm({ productId }: { productId: string }) {
       <select name="stars" defaultValue="5" aria-label="Stars">
         {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{"★".repeat(n)}</option>)}
       </select>
-      <input name="text" placeholder="Your review" aria-label="Your review" />
+      <input name="text" placeholder="Your review" aria-label="Your review" minLength={3} maxLength={500} required />
       <button disabled={pending}>{pending ? "Sending…" : "Send review"}</button>
       {state.error && <p role="alert" className="error">{state.error}</p>}
       {state.sent > 0 && <p className="thanks">Thank you — your review is on the page.</p>}
