@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import CartCount from "./CartCount";
+import WebVitals from "./WebVitals";
 import "./globals.css";
 
 // the real address comes from the environment in chapter 18; until then, this machine
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ar" dir="rtl">
       <body>
+        <WebVitals />
         <header className="top">
           <Link href="/" className="brand">Siraj Shop</Link>
           <nav>

@@ -6,3 +6,7 @@ main { max-width: 960px; margin: auto; padding: 24px; }
 .top a { color: #fff; text-decoration: none; margin-inline-start: 16px; }
 .top .brand { font-weight: 700; margin: 0; }
 .top .cart-count { color: #fff; margin-inline-start: 16px; }
+
+/* streamed parts keep their place before they arrive — nothing below them jumps (chapter 16) */
+.reviews { min-height: 190px; }
+.review-area { min-height: 56px; }

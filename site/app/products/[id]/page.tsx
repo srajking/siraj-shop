@@ -33,12 +33,14 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]"
       <h1>{product.name}</h1>
       <p>{product.price.toLocaleString("en")} IQD · {product.stock} in stock</p>
       <AddToCart id={product.id} stock={product.stock} />
-      <Suspense fallback={<p className="wait">Loading reviews…</p>}>
+      <Suspense fallback={<section className="reviews"><h3>Reviews</h3><p className="wait">Loading reviews…</p></section>}>
         <Reviews id={id} />
       </Suspense>
-      <Suspense fallback={null}>
-        <ReviewArea productId={id} />
-      </Suspense>
+      <div className="review-area">
+        <Suspense fallback={null}>
+          <ReviewArea productId={id} />
+        </Suspense>
+      </div>
       <h3>More products</h3>
       <ul>
         {others.map((p) => (
