@@ -1,3 +1,4 @@
+import type { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
@@ -9,6 +10,16 @@ import ReviewArea from "./ReviewArea";
 // build these shells ahead of time — the reviews still stream in on every visit
 export async function generateStaticParams() {
   return (await getProducts()).map((p) => ({ id: String(p.id) }));
+}
+
+// the title a search result and a shared link show — from the same cached product
+export async function generateMetadata({ params }: PageProps<"/products/[id]">, parent: ResolvingMetadata): Promise<Metadata> {
+  const product = await getProduct((await params).id);
+  if (!product) return { title: "Not found" };
+  const description = `${product.name} — ${product.price.toLocaleString("en")} IQD at Siraj Shop`;
+  // openGraph here REPLACES the layout's — so carry its picture over
+  const images = (await parent).openGraph?.images ?? [];
+  return { title: product.name, description, openGraph: { title: product.name, description, images } };
 }
 
 export default async function ProductPage({ params }: PageProps<"/products/[id]">) {
