@@ -1,5 +1,17 @@
 # Changelog
 
+## 9.0.0 — the shop in Next.js
+
+- The shop is rebuilt in Next.js 16 (App Router), in `site/`: server components read the API on the server, the browser gets HTML first
+- Product pages are prerendered and cached (`'use cache'`, tags), reviews stream in fresh; the admin script refreshes a product with `POST /revalidate`, which answers 400/404/401 for mistakes
+- Reviews are written through a Server Action: checked with zod, only for logged-in customers (signed, httpOnly session), the name comes from the session
+- A missing product is a real 404 (checked by `proxy.ts` before the page streams)
+- One cart for every page (Zustand + localStorage), its count in the header, no hydration errors
+- Every page has its own title and description; share image, `sitemap.xml` and `robots.txt`
+- Streamed parts keep their place (product page CLS 0.024 → 0); real-user Web Vitals collected at `/api/vitals`
+- Tests: 6 unit tests (Vitest) and 4 end-to-end journeys (Playwright), one for each promise above
+- Settings and secrets come from the environment, checked at start (`lib/env.ts`, `.env.example`); `output: "standalone"` builds a 73 MB server instead of 669 MB of node_modules
+
 ## 8.0.0 — state in the right place
 
 - Every piece of state has one owner, written down in `web/docs/STATE.md`; `npm run state-map` counts them and checks the document
