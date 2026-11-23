@@ -1,16 +1,14 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getProduct, getProducts, getReviews } from "@/lib/shop";
+import { getProduct, getProducts } from "@/lib/shop";
 import AddToCart from "./AddToCart";
+import Reviews from "./Reviews";
 
-// one HTML file per product, written at build time
-export async function generateStaticParams() {
-  return (await getProducts()).map((p) => ({ id: String(p.id) }));
-}
-
+// rendered on every visit: the product first, the reviews stream in after
 export default async function ProductPage({ params }: PageProps<"/products/[id]">) {
   const { id } = await params;
-  const [product, reviews, all] = await Promise.all([getProduct(id), getReviews(id), getProducts()]);
+  const [product, all] = await Promise.all([getProduct(id), getProducts()]);
   if (!product) notFound();
   const others = all.filter((p) => p.id !== product.id);
 
@@ -19,8 +17,9 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]"
       <h1>{product.name}</h1>
       <p>{product.price.toLocaleString("en")} IQD · {product.stock} in stock</p>
       <AddToCart stock={product.stock} />
-      <h3>Reviews ({reviews.length})</h3>
-      <ul>{reviews.map((r) => <li key={r.id}>{"★".repeat(r.stars)} {r.text}</li>)}</ul>
+      <Suspense fallback={<p className="wait">Loading reviews…</p>}>
+        <Reviews id={id} />
+      </Suspense>
       <h3>More products</h3>
       <ul>
         {others.map((p) => (

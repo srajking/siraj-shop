@@ -14,3 +14,11 @@ async function get<T>(path: string): Promise<T | null> {
 export const getProducts = async () => (await get<Product[]>("/products")) ?? [];
 export const getProduct = (id: string) => get<Product>(`/products/${id}`);
 export const getReviews = async (id: string) => (await get<Review[]>(`/products/${id}/reviews`)) ?? [];
+
+// newest reviews first, and how many there are in all
+export async function getLatestReviews(id: string, limit = 5) {
+  const res = await fetch(`${API}/reviews?product=${id}&limit=${limit}`);
+  if (!res.ok) throw new Error(`/reviews → ${res.status}`);
+  const { items } = (await res.json()) as { items: Review[] };
+  return { items, total: Number(res.headers.get("X-Total-Count")) };
+}
