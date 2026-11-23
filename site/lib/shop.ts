@@ -1,4 +1,4 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 // the shop API, read on the server — never from the browser
 const API = "http://localhost:4000/api";
@@ -17,12 +17,14 @@ async function get<T>(path: string): Promise<T | null> {
 export async function getProducts() {
   "use cache";
   cacheLife("hours");
+  cacheTag("products");
   return (await get<Product[]>("/products")) ?? [];
 }
 
 export async function getProduct(id: string) {
   "use cache";
   cacheLife("hours");
+  cacheTag("products", `product-${id}`);
   return get<Product>(`/products/${id}`);
 }
 
