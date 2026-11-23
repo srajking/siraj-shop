@@ -1,8 +1,9 @@
 import Link from "next/link";
-import products from "../../server/data/products.json";
+import { getProducts } from "@/lib/shop";
 
 // the home page — rendered on the server, so the products are in the HTML
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts();
   return (
     <main>
       <h1>Products</h1>
