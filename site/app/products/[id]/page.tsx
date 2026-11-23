@@ -21,7 +21,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]"
     <main>
       <h1>{product.name}</h1>
       <p>{product.price.toLocaleString("en")} IQD · {product.stock} in stock</p>
-      <AddToCart stock={product.stock} />
+      <AddToCart id={product.id} stock={product.stock} />
       <Suspense fallback={<p className="wait">Loading reviews…</p>}>
         <Reviews id={id} />
       </Suspense>

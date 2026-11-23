@@ -1,12 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useCart } from "@/lib/cart";
 
-// the only part of the product page that runs in the browser
-export default function AddToCart({ stock }: { stock: number }) {
-  const [qty, setQty] = useState(0);
+// reads and writes the shared cart — not its own useState any more
+export default function AddToCart({ id, stock }: { id: number; stock: number }) {
+  const qty = useCart((s) => s.items[id] ?? 0);
+  const add = useCart((s) => s.add);
   const full = qty >= stock;
   return (
-    <button onClick={() => setQty(qty + 1)} disabled={full}>
+    <button onClick={() => add(id, stock)} disabled={full}>
       {full ? "No more in stock" : "Add to cart"} · in cart: {qty}
     </button>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import CartCount from "./CartCount";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <nav>
             <Link href="/">Products</Link>
             <Link href="/about">About</Link>
+            <CartCount />
           </nav>
         </header>
         {children}
