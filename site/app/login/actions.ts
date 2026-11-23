@@ -3,7 +3,9 @@ import * as z from "zod";
 import { redirect } from "next/navigation";
 import { createSession, deleteSession } from "@/lib/session";
 
-const API = "http://localhost:4000/api";
+import { env } from "@/lib/env";
+
+const API = env.SHOP_API;
 export type LoginState = { error: string | null };
 const LoginInput = z.object({
   username: z.string().trim().min(1, "Write your username"),

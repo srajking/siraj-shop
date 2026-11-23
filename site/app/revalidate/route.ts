@@ -1,7 +1,9 @@
 import { revalidateTag } from "next/cache";
 
-const API = "http://localhost:4000/api";
-const SECRET = "dev-secret"; // moves to an environment variable in chapter 18
+import { env } from "@/lib/env";
+
+const API = env.SHOP_API;
+const SECRET = env.REVALIDATE_SECRET; // from the environment (chapter 18)
 
 // the shop admin calls this after changing a product: POST /revalidate?id=1
 // a mistake must come back as a mistake — not as a quiet "revalidated"

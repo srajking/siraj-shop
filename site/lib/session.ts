@@ -1,7 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-const SECRET = "dev-session-secret"; // moves to an environment variable in chapter 18
+import { env } from "./env";
+
+const SECRET = env.SESSION_SECRET; // from the environment — never written in the code
 export type Session = { userId: number; name: string; role: "customer" | "admin"; exp: number };
 
 const sign = (body: string) => createHmac("sha256", SECRET).update(body).digest("base64url");

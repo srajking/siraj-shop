@@ -1,6 +1,8 @@
 import { connection } from "next/server";
 
-const API = "http://localhost:4000/api";
+import { env } from "@/lib/env";
+
+const API = env.SHOP_API;
 
 // GET /api/health — is the site up, and can it reach the shop API?
 // a monitor (and the deploy in chapter 18) reads the status code: 200 or 503

@@ -4,8 +4,10 @@ import CartCount from "./CartCount";
 import WebVitals from "./WebVitals";
 import "./globals.css";
 
-// the real address comes from the environment in chapter 18; until then, this machine
-export const SITE = process.env.SITE_URL ?? "http://localhost:3000";
+import { env } from "@/lib/env";
+
+// the real address of the shop, from the environment
+export const SITE = env.SITE_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

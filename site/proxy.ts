@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const API = "http://localhost:4000/api";
+import { env } from "@/lib/env";
+
+const API = env.SHOP_API;
 
 // A product page streams before it knows the product exists, so notFound()
 // there can only send 200 + noindex (chapter 6). The proxy asks first —

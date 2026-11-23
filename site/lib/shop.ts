@@ -1,7 +1,9 @@
 import { cacheLife, cacheTag } from "next/cache";
 
 // the shop API, read on the server — never from the browser
-const API = "http://localhost:4000/api";
+import { env } from "./env";
+
+const API = env.SHOP_API;
 
 export type Product = { id: number; name: string; price: number; stock: number };
 export type Review = { id: number; stars: number; text: string };

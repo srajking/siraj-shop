@@ -4,7 +4,9 @@ import * as z from "zod";
 import { getProduct } from "@/lib/shop";
 import { getSession } from "@/lib/dal";
 
-const API = "http://localhost:4000/api";
+import { env } from "@/lib/env";
+
+const API = env.SHOP_API;
 export type ReviewState = { error: string | null; sent: number };
 
 // everything from the form is a string from a stranger: check it on the server
