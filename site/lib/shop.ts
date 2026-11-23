@@ -1,3 +1,5 @@
+import { cacheLife } from "next/cache";
+
 // the shop API, read on the server — never from the browser
 const API = "http://localhost:4000/api";
 
@@ -11,9 +13,18 @@ async function get<T>(path: string): Promise<T | null> {
   return res.json();
 }
 
-export const getProducts = async () => (await get<Product[]>("/products")) ?? [];
-export const getProduct = (id: string) => get<Product>(`/products/${id}`);
-export const getReviews = async (id: string) => (await get<Review[]>(`/products/${id}/reviews`)) ?? [];
+// products change rarely: keep them for an hour
+export async function getProducts() {
+  "use cache";
+  cacheLife("hours");
+  return (await get<Product[]>("/products")) ?? [];
+}
+
+export async function getProduct(id: string) {
+  "use cache";
+  cacheLife("hours");
+  return get<Product>(`/products/${id}`);
+}
 
 // newest reviews first, and how many there are in all
 export async function getLatestReviews(id: string, limit = 5) {

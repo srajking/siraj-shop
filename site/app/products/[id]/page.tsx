@@ -5,7 +5,11 @@ import { getProduct, getProducts } from "@/lib/shop";
 import AddToCart from "./AddToCart";
 import Reviews from "./Reviews";
 
-// rendered on every visit: the product first, the reviews stream in after
+// build these shells ahead of time — the reviews still stream in on every visit
+export async function generateStaticParams() {
+  return (await getProducts()).map((p) => ({ id: String(p.id) }));
+}
+
 export default async function ProductPage({ params }: PageProps<"/products/[id]">) {
   const { id } = await params;
   const [product, all] = await Promise.all([getProduct(id), getProducts()]);
