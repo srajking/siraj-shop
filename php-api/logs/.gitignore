@@ -1,0 +1,3 @@
+# keep the folder, never commit the log itself
+*
+!.gitignore
