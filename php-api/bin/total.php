@@ -8,8 +8,10 @@ const DISCOUNT_LIMIT = 10000;   // server.js: DISCOUNT.LIMIT
 const DISCOUNT_RATE  = 0.9;     // server.js: DISCOUNT.RATE
 
 $subtotal = (int) getenv('SUBTOTAL');
-$reached  = $subtotal >= DISCOUNT_LIMIT;                     // true / false
-$rate     = 1 - (1 - DISCOUNT_RATE) * (int) $reached;      // true → 0.9, false → 1 (a clearer way: chapter 6)
-$total    = (int) round($subtotal * $rate);                   // round() gives float; the API sends int
+if ($subtotal >= DISCOUNT_LIMIT) {
+    $total = (int) round($subtotal * DISCOUNT_RATE);         // round() gives float; the API sends int
+} else {
+    $total = $subtotal;
+}
 
 echo $total, PHP_EOL;

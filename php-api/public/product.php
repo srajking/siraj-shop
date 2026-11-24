@@ -25,7 +25,14 @@ echo <<<HTML
     <body>
       <h1>$name</h1>
       <p>$priceText · $stock in stock</p>
-    </body>
-    </html>
 
     HTML;
+?>
+<?php // the button words come from the Next site (AddToCart.tsx) ?>
+<?php if ($stock > 0): ?>
+  <button>Add to cart</button>
+<?php else: ?>
+  <button disabled>No more in stock</button>
+<?php endif; ?>
+</body>
+</html>
