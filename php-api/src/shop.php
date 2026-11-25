@@ -120,3 +120,20 @@ function reviewError(array $body): ?array
     if (mb_strlen($text) < 2 || mb_strlen($text) > 500) return ['error' => 'text must be 2 to 500 letters', 'length' => mb_strlen($text)];
     return null;
 }
+
+/** start the login session with safe cookie settings (HttpOnly, SameSite=Lax, ids only from the server) */
+function startSession(): void
+{
+    ini_set('session.use_strict_mode', '1');            // refuse ids the server never made (session fixation)
+    session_name('shop_session');
+    session_set_cookie_params(['path' => '/', 'httponly' => true, 'samesite' => 'Lax']);
+    session_start();
+}
+
+/** the logged-in user as server.js /api/me returns it, or null */
+function currentUser(): ?array
+{
+    if (!isset($_SESSION['user'])) return null;
+    $u = (require __DIR__ . '/../data/users.php')[$_SESSION['user']] ?? null;
+    return $u === null ? null : ['id' => $u['id'], 'name' => $u['name'], 'role' => $u['role']];
+}
