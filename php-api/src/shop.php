@@ -68,3 +68,27 @@ function productList(?string $sort = null, string $q = '', ?string $category = n
     if ($sort !== null)     usort($list, productSorts()[$sort]);
     return array_values($list);
 }
+
+/** send JSON like send() in server.js and stop: status, Content-Type, the body as JSON.stringify writes it */
+function sendJson(int $status, mixed $data, array $headers = []): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    foreach ($headers as $name => $value) header("$name: $value");
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    exit;
+}
+
+/** like cached() in server.js: an ETag from the body, Cache-Control, and 304 when the browser has it already */
+function sendCached(mixed $data, array $headers = []): never
+{
+    $body = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    $etag = '"' . substr(rtrim(strtr(base64_encode(sha1($body, true)), '+/', '-_'), '='), 0, 16) . '"';
+    $headers += ['ETag' => $etag, 'Cache-Control' => 'max-age=30'];
+    if (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
+        http_response_code(304);
+        foreach ($headers as $name => $value) header("$name: $value");
+        exit;
+    }
+    sendJson(200, $data, $headers);
+}
