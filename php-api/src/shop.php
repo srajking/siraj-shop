@@ -92,3 +92,31 @@ function sendCached(mixed $data, array $headers = []): never
     }
     sendJson(200, $data, $headers);
 }
+
+/** the reviews as server.js loads them — read only for now; saving new ones: chapter 16 */
+function reviews(): array
+{
+    return json_decode(file_get_contents(__DIR__ . '/../../server/data/reviews.json'), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** text → safe HTML: < > & " ' become entities — use it for every value printed into a page */
+function e(string $s): string
+{
+    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/**
+ * The review rules, checked on the server. Returns null when the review is fine,
+ * or the first error in the same shape as server.js: ['error' => …, field => what was sent].
+ * server.js checks only the stars; the name and text rules are new here.
+ */
+function reviewError(array $body): ?array
+{
+    $stars = $body['stars'] ?? null;
+    if (!is_int($stars) || $stars < 1 || $stars > 5) return ['error' => 'stars must be 1 to 5', 'stars' => $stars];
+    $name = trim((string) ($body['name'] ?? ''));
+    if ($name === '' || mb_strlen($name) > 40) return ['error' => 'name must be 1 to 40 letters', 'name' => mb_substr($name, 0, 50)];
+    $text = trim((string) ($body['text'] ?? ''));
+    if (mb_strlen($text) < 2 || mb_strlen($text) > 500) return ['error' => 'text must be 2 to 500 letters', 'length' => mb_strlen($text)];
+    return null;
+}
