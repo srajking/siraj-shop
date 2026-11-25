@@ -2,14 +2,7 @@
 declare(strict_types=1);
 // products.php — the product list, the same markup as the Next home page (site/app/page.tsx):
 //   <li><h3><a href="/products/ID">NAME</a></h3><p>PRICE IQD</p></li>
-// One record per product, the same fields as server/data/products.json
-// (copied by hand for now — reading the file is chapter 16).
-
-$products = [
-    ['id' => 1, 'name' => 'دفتر A5',   'price' => 3000,  'stock' => 12, 'category' => 'stationery'],
-    ['id' => 2, 'name' => 'قلم حبر',   'price' => 1000,  'stock' => 40, 'category' => 'stationery'],
-    ['id' => 3, 'name' => 'حقيبة ظهر', 'price' => 19000, 'stock' => 3,  'category' => 'bags'],
-];
+require __DIR__ . '/../src/shop.php';
 ?>
 <!doctype html>
 <html lang="ar" dir="rtl">
@@ -20,10 +13,10 @@ $products = [
 <body>
   <h1>Products</h1>
   <ul class="grid">
-<?php foreach ($products as ['id' => $id, 'name' => $name, 'price' => $price]): ?>
+<?php foreach (PRODUCTS as ['id' => $id, 'name' => $name, 'price' => $price]): ?>
     <li>
       <h3><a href="/products/<?= $id ?>"><?= $name ?></a></h3>
-      <p><?= number_format($price) ?> IQD</p>
+      <p><?= priceText($price) ?></p>
     </li>
 <?php endforeach; ?>
   </ul>

@@ -4,13 +4,11 @@ declare(strict_types=1);
 //   "{name} — 19,000 IQD at Siraj Shop"  and  "19,000 IQD · 3 in stock"
 // For now one product in variables; products.json comes in chapter 16.
 
-const SHOP = 'Siraj Shop';
+require __DIR__ . '/../src/shop.php';
 
-$name  = 'حقيبة ظهر';
-$price = 19000;
-$stock = 3;
+['name' => $name, 'price' => $price, 'stock' => $stock] = PRODUCTS[3];   // one product for now — ?id= in chapter 12
 
-$priceText   = number_format($price) . ' IQD';            // 19,000 IQD — same as toLocaleString("en")
+$priceText   = priceText($price);                         // 19,000 IQD — same as toLocaleString("en")
 $shop        = SHOP;                                       // a constant can't go inside "…"
 $description = "$name — $priceText at $shop";
 
