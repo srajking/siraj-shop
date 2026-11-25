@@ -28,16 +28,10 @@ set_exception_handler(function (Throwable $e): void {
     sendJson(500, ['error' => 'server error', 'requestId' => $id]);
 });
 
-/** one row of products.json → a Product: a wrong type or a missing field stops here, before any page */
+/** one row of products.json → a Product: the keys become named arguments — a wrong type or a missing field stops here */
 function productFrom(array $row): Shop\Product
 {
-    $p = new Shop\Product();
-    $p->id = $row['id'];
-    $p->name = $row['name'];
-    $p->price = $row['price'];
-    $p->stock = $row['stock'];
-    $p->category = $row['category'];
-    return $p;
+    return new Shop\Product(...$row);
 }
 
 // the products come from the same file Node reads — one list for both servers, keyed by id;
