@@ -8,12 +8,11 @@ const SHOP           = 'Siraj Shop';
 const DISCOUNT_LIMIT = 10000;   // server.js: DISCOUNT.LIMIT
 const DISCOUNT_RATE  = 0.9;     // server.js: DISCOUNT.RATE
 
-// the same fields as server/data/products.json, keyed by id (reading the file: chapter 16)
-const PRODUCTS = [
-    1 => ['id' => 1, 'name' => 'دفتر A5',   'price' => 3000,  'stock' => 12, 'category' => 'stationery'],
-    2 => ['id' => 2, 'name' => 'قلم حبر',   'price' => 1000,  'stock' => 40, 'category' => 'stationery'],
-    3 => ['id' => 3, 'name' => 'حقيبة ظهر', 'price' => 19000, 'stock' => 3,  'category' => 'bags'],
-];
+// the products come from the same file Node reads — one list for both servers, keyed by id
+define('PRODUCTS', array_column(
+    json_decode(file_get_contents(__DIR__ . '/../../server/data/products.json'), true, flags: JSON_THROW_ON_ERROR), null, 'id'));
+
+const REVIEWS_FILE = __DIR__ . '/../data/reviews.json';   // the PHP shop's reviews (not committed)
 
 /** 19000 → "19,000 IQD" — like toLocaleString("en") on the Next site */
 function priceText(int $price): string
@@ -93,10 +92,30 @@ function sendCached(mixed $data, array $headers = []): never
     sendJson(200, $data, $headers);
 }
 
-/** the reviews as server.js loads them — read only for now; saving new ones: chapter 16 */
+/** all reviews — before the first new one is saved, Node's seed file */
 function reviews(): array
 {
-    return json_decode(file_get_contents(__DIR__ . '/../../server/data/reviews.json'), true, flags: JSON_THROW_ON_ERROR);
+    $file = is_file(REVIEWS_FILE) ? REVIEWS_FILE : __DIR__ . '/../../server/data/reviews.json';
+    return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** save a review and return it with its id: one request at a time (lock), and the file is replaced whole (rename) */
+function addReview(array $review): array
+{
+    $lock = fopen(REVIEWS_FILE . '.lock', 'c');
+    flock($lock, LOCK_EX);                                   // the next request waits here
+    try {
+        $all = reviews();
+        $review = ['id' => count($all) + 1] + $review;       // the id rule of server.js
+        $all[] = $review;
+        $tmp = REVIEWS_FILE . '.' . getmypid() . '.tmp';
+        file_put_contents($tmp, json_encode($all, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        rename($tmp, REVIEWS_FILE);                          // readers see the old file or the new one, never half
+        return $review;
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
 }
 
 /** text → safe HTML: < > & " ' become entities — use it for every value printed into a page */

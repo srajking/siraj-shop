@@ -23,5 +23,5 @@ try {
 if (!is_array($body)) sendJson(400, ['error' => 'body is not valid JSON', 'detail' => 'not an object']);
 if ($error = reviewError($body)) sendJson(422, $error);
 
-$review = ['id' => count(reviews()) + 1, 'productId' => $id, 'name' => trim($body['name']), 'stars' => $body['stars'], 'text' => trim($body['text'])];
+$review = addReview(['productId' => $id, 'name' => trim($body['name']), 'stars' => $body['stars'], 'text' => trim($body['text'])]);
 sendJson(201, $review, ['Location' => "/api/products/$id/reviews/{$review['id']}"]);
