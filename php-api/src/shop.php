@@ -142,6 +142,19 @@ function addReview(array $review): array
     }
 }
 
+/** a page cursor like server.js: "id:239" in base64url — the client treats it as an opaque string */
+function cursorOf(int $id): string
+{
+    return rtrim(strtr(base64_encode("id:$id"), '+/', '-_'), '=');
+}
+
+/** the id inside a cursor, or null when it is not one of ours */
+function cursorId(string $cursor): ?int
+{
+    $raw = base64_decode(strtr($cursor, '-_', '+/'), true);
+    return is_string($raw) && preg_match('/^id:(\d+)$/', $raw, $m) && (int) $m[1] > 0 ? (int) $m[1] : null;
+}
+
 /** text → safe HTML: < > & " ' become entities — use it for every value printed into a page */
 function e(string $s): string
 {

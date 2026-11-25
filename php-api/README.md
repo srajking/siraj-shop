@@ -7,7 +7,7 @@ Run it:
 ```sh
 cd php-api
 composer install      # once: makes vendor/autoload.php (no packages to download)
-php -S localhost:8000 -t public -c php.ini
+php -S localhost:8000 -t public -c php.ini public/index.php   # public/index.php = the front controller
 ```
 
 Only `public/` is reachable from the browser; this README and every other file stay on the server.
@@ -19,3 +19,5 @@ New reviews are saved in `data/reviews.json` (not committed); until the first on
 Check the code without running it: `composer lint` (syntax, `strict_types`, `var_dump` left behind).
 
 An uncaught error returns `500 {"error":"server error","requestId":"…"}`; the same id is in `logs/php-error.log` with the cause.
+
+The URLs are the same as the Node API: point the Next site at it with `SHOP_API=http://localhost:8000/api`.
