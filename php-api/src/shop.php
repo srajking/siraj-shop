@@ -8,6 +8,26 @@ const SHOP           = 'Siraj Shop';
 const DISCOUNT_LIMIT = 10000;   // server.js: DISCOUNT.LIMIT
 const DISCOUNT_RATE  = 0.9;     // server.js: DISCOUNT.RATE
 
+require __DIR__ . '/../vendor/autoload.php';            // composer: Shop\StoreError → src/StoreError.php
+
+// any exception nobody caught: the details go to the log, the customer gets short JSON with an id to quote
+set_exception_handler(function (Throwable $e): void {
+    $id = bin2hex(random_bytes(4));
+    $cause = $e->getPrevious() ?? $e;
+    error_log(json_encode([
+        'requestId' => $id,
+        'request'   => ($_SERVER['REQUEST_METHOD'] ?? 'CLI') . ' ' . ($_SERVER['REQUEST_URI'] ?? implode(' ', $_SERVER['argv'] ?? [])),
+        'error'     => $e::class . ': ' . $e->getMessage(),
+        'cause'     => $cause::class . ': ' . $cause->getMessage(),
+        'at'        => $cause->getFile() . ':' . $cause->getLine(),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    if (PHP_SAPI === 'cli') {
+        fwrite(STDERR, "error $id — see the log\n");
+        exit(1);
+    }
+    sendJson(500, ['error' => 'server error', 'requestId' => $id]);
+});
+
 // the products come from the same file Node reads — one list for both servers, keyed by id
 define('PRODUCTS', array_column(
     json_decode(file_get_contents(__DIR__ . '/../../server/data/products.json'), true, flags: JSON_THROW_ON_ERROR), null, 'id'));
@@ -96,7 +116,11 @@ function sendCached(mixed $data, array $headers = []): never
 function reviews(): array
 {
     $file = is_file(REVIEWS_FILE) ? REVIEWS_FILE : __DIR__ . '/../../server/data/reviews.json';
-    return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+    try {
+        return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+    } catch (JsonException $e) {
+        throw new Shop\StoreError('the reviews file is broken', previous: $e);   // say what broke, keep the cause
+    }
 }
 
 /** save a review and return it with its id: one request at a time (lock), and the file is replaced whole (rename) */

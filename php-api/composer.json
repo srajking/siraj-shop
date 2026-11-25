@@ -1,0 +1,8 @@
+{
+    "name": "siraj/shop-php-api",
+    "description": "The Siraj Shop API in PHP — the same answers as server/ (Node)",
+    "license": "proprietary",
+    "require": { "php": ">=8.3" },
+    "autoload": { "psr-4": { "Shop\\": "src/" } },
+    "scripts": { "lint": "php bin/lint.php src public bin" }
+}
