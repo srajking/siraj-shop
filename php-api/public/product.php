@@ -2,11 +2,19 @@
 declare(strict_types=1);
 // product.php — one product, written exactly like the Next site writes it:
 //   "{name} — 19,000 IQD at Siraj Shop"  and  "19,000 IQD · 3 in stock"
-// For now one product in variables; products.json comes in chapter 16.
+// URL: /product.php?id=3  (the Next site: /products/3)
 
 require __DIR__ . '/../src/shop.php';
 
-['name' => $name, 'price' => $price, 'stock' => $stock] = PRODUCTS[3];   // one product for now — ?id= in chapter 12
+// ?id= arrives as text: accept only a whole number from 1 — anything else is "not found"
+$id      = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$product = is_int($id) ? (PRODUCTS[$id] ?? null) : null;
+if ($product === null) {
+    http_response_code(404);                                 // like notFound() in Next — status codes: chapter 13
+    echo "<!doctype html>\n<title>Not found · Siraj Shop</title>\n<h1>Not found</h1>\n";
+    exit;
+}
+['name' => $name, 'price' => $price, 'stock' => $stock] = $product;
 
 $priceText   = priceText($price);                         // 19,000 IQD — same as toLocaleString("en")
 $shop        = SHOP;                                       // a constant can't go inside "…"
