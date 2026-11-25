@@ -29,7 +29,7 @@ $products = productList($sort, $q, $category);
 <?php foreach ($products as ['id' => $id, 'name' => $name, 'price' => $price]): ?>
     <li>
       <h3><a href="/products/<?= $id ?>"><?= $name ?></a></h3>
-      <p><?= priceText($price) ?></p>
+      <p><?= Shop\Price::text($price) ?></p>
     </li>
 <?php endforeach; ?>
   </ul>

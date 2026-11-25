@@ -4,9 +4,7 @@ declare(strict_types=1);
 //   require __DIR__ . '/../src/shop.php';
 // It is outside public/, so no one can request it from the browser.
 
-const SHOP           = 'Siraj Shop';
-const DISCOUNT_LIMIT = 10000;   // server.js: DISCOUNT.LIMIT
-const DISCOUNT_RATE  = 0.9;     // server.js: DISCOUNT.RATE
+const SHOP = 'Siraj Shop';
 
 require __DIR__ . '/../vendor/autoload.php';            // composer: Shop\StoreError → src/StoreError.php
 
@@ -43,18 +41,6 @@ define('PRODUCTS', array_column(array_map(
 
 const REVIEWS_FILE = __DIR__ . '/../data/reviews.json';   // the PHP shop's reviews (not committed)
 
-/** 19000 → "19,000 IQD" — like toLocaleString("en") on the Next site */
-function priceText(int $price): string
-{
-    return number_format($price) . ' IQD';
-}
-
-/** the discount rule — 10% off from 10,000 IQD, rounded to a whole dinar */
-function discountTotal(int $subtotal): int
-{
-    return $subtotal >= DISCOUNT_LIMIT ? (int) round($subtotal * DISCOUNT_RATE) : $subtotal;
-}
-
 /** "3:2,2:3" → items with id, name, price, qty */
 function parseCart(string $text): array
 {
@@ -73,7 +59,7 @@ function cartSummary(array $items): array
     return [
         'count'    => array_sum(array_column($items, 'qty')),
         'subtotal' => $subtotal,
-        'total'    => discountTotal($subtotal),
+        'total'    => Shop\Price::discounted($subtotal),
     ];
 }
 

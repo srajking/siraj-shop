@@ -16,7 +16,7 @@ if ($product === null) {
 }
 ['name' => $name, 'price' => $price, 'stock' => $stock] = $product;
 
-$priceText   = priceText($price);                         // 19,000 IQD — same as toLocaleString("en")
+$priceText   = Shop\Price::text($price);                         // 19,000 IQD — same as toLocaleString("en")
 $shop        = SHOP;                                       // a constant can't go inside "…"
 $description = "$name — $priceText at $shop";
 
