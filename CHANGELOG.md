@@ -1,5 +1,15 @@
 # Changelog
 
+## 10.0.0 — the shop API in PHP
+
+- `php-api/`: the shop API in PHP 8.3, with the same URLs as `server/` through a front controller (`public/index.php`); `check-final.sh` gets the same answers from both: 12 of 12
+- The Next site runs on it unchanged: `SHOP_API=http://localhost:8000/api`, health `up`, the 4 end-to-end journeys pass with Node switched off
+- Passwords are bcrypt hashes (`data/users.php`), the session cookie is HttpOnly and SameSite, and a login always gets a new session id
+- Reviews are checked on the server (empty name, 5000 letters → 422) and saved in `data/reviews.json` under a lock, written whole with `rename`: 20 at the same moment, none lost
+- Products are read from `server/data/products.json` — one list for both servers
+- An uncaught error answers `500 {"error":"server error","requestId":…}`; the log has the same id and the cause; no `X-Powered-By`
+- `composer install` sets up autoloading; `composer lint` checks syntax, `strict_types` and leftover `var_dump` (0 problems)
+
 ## 9.0.0 — the shop in Next.js
 
 - The shop is rebuilt in Next.js 16 (App Router), in `site/`: server components read the API on the server, the browser gets HTML first
