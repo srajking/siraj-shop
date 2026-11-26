@@ -3,8 +3,9 @@ declare(strict_types=1);
 // status.php — the team opens it to check the API is alive.
 // Only public facts here: no paths, no settings.
 
+require __DIR__ . '/../vendor/autoload.php';
 const SHOP = 'Siraj Shop API';
-const API_VERSION = '0.3.0';   // raise it with every change to the API
+const API_VERSION = Shop\Release::VERSION;   // one place: src/Release.php (and CHANGELOG.md)
 ?>
 <!doctype html>
 <html lang="ar" dir="rtl">

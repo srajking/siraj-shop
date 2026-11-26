@@ -13,3 +13,4 @@ node_modules/
 php-api/data/reviews.json*
 php-api/vendor/
 php-api/data/carts/
+php-api/data/orders.json*

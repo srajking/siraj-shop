@@ -74,6 +74,17 @@ function cartService(): Shop\CartService
     return $service ??= new Shop\CartService(cartRepository(), catalog());
 }
 
+/** placing orders: the cart store, the order file (SHOP_ORDERS for the checks) and the cart view */
+function checkout(): Shop\Checkout
+{
+    static $checkout = null;
+    return $checkout ??= new Shop\Checkout(
+        cartRepository(),
+        new Shop\FileOrderRepository(getenv('SHOP_ORDERS') ?: __DIR__ . '/../data/orders.json'),
+        cartView(...),
+    );
+}
+
 /** the JSON body of a request like readJson() in server.js: 415 when it is not JSON, 400 when it does not parse */
 function jsonBody(): mixed
 {

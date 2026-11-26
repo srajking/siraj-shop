@@ -6,26 +6,25 @@ declare(strict_types=1);
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
 if ($path !== '/' && is_file(__DIR__ . $path)) return false;        // a real file (the old .php URLs): php -S serves it
 
-const ROUTES = [                                                     // pattern => [file, name of the number in the path]
-    '#^/api/products$#'               => ['api/products.php'],
-    '#^/api/products/(\d+)$#'         => ['api/products.php', 'id'],
-    '#^/api/products/(\d+)/reviews$#' => ['api/reviews.php', 'product'],
-    '#^/api/reviews$#'                => ['api/review-list.php'],
-    '#^/api/reviews/summary$#'        => ['api/review-summary.php'],
-    '#^/api/cart$#'                   => ['api/cart.php'],
-    '#^/api/cart/items$#'             => ['api/cart-items.php'],
-    '#^/api/cart/items/(\d+)$#'       => ['api/cart-item.php', 'id'],
-    '#^/api/cart/receipt$#'           => ['api/cart-receipt.php'],
-    '#^/api/login$#'                  => ['api/login.php'],
-    '#^/api/me$#'                     => ['api/me.php'],
-    '#^/api/logout$#'                 => ['api/logout.php'],
-];
-foreach (ROUTES as $pattern => $route) {
-    if (preg_match($pattern, $path, $m)) {
-        if (isset($route[1])) $_GET[$route[1]] = $m[1];             // /api/products/3 → $_GET['id'] = '3'
-        require __DIR__ . '/' . $route[0];
-        exit;
-    }
+require __DIR__ . '/../vendor/autoload.php';
+$router = (new Shop\Router())                                       // the URL table — the same URLs as server.js
+    ->add('#^/api/products$#', 'api/products.php')
+    ->add('#^/api/products/(\d+)$#', 'api/products.php', 'id')        // /api/products/3 → $_GET['id'] = '3'
+    ->add('#^/api/products/(\d+)/reviews$#', 'api/reviews.php', 'product')
+    ->add('#^/api/reviews$#', 'api/review-list.php')
+    ->add('#^/api/reviews/summary$#', 'api/review-summary.php')
+    ->add('#^/api/cart$#', 'api/cart.php')
+    ->add('#^/api/cart/items$#', 'api/cart-items.php')
+    ->add('#^/api/cart/items/(\d+)$#', 'api/cart-item.php', 'id')
+    ->add('#^/api/cart/receipt$#', 'api/cart-receipt.php')
+    ->add('#^/api/orders$#', 'api/orders.php')
+    ->add('#^/api/login$#', 'api/login.php')
+    ->add('#^/api/me$#', 'api/me.php')
+    ->add('#^/api/logout$#', 'api/logout.php');
+if ($route = $router->match($path)) {
+    $_GET = $route['params'] + $_GET;
+    require __DIR__ . '/' . $route['page'];
+    exit;
 }
 if ($path === '/') exit("Siraj Shop API — PHP is running\n");
 require __DIR__ . '/../src/shop.php';

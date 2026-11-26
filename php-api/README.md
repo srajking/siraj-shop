@@ -23,3 +23,7 @@ An uncaught error returns `500 {"error":"server error","requestId":"…"}`; the 
 The URLs are the same as the Node API: point the Next site at it with `SHOP_API=http://localhost:8000/api`.
 
 Reviews live behind `Shop\ReviewStore`; the file is `data/reviews.json`, or the one named in `SHOP_REVIEWS` (the check scripts use their own).
+
+Carts and orders: `/api/cart…` and `/api/orders` answer like server.js; carts are files in `data/carts/` (or `SHOP_CARTS`), orders in `data/orders.json` (or `SHOP_ORDERS`) — none committed.
+
+Unit tests: `composer test` (`tests/`, no server). The version is in `src/Release.php`; what changed is in `CHANGELOG.md`.
