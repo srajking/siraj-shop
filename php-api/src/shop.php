@@ -117,34 +117,23 @@ function sendCached(mixed $data, array $headers = []): never
     sendJson(200, $data, $headers);
 }
 
-/** all reviews — before the first new one is saved, Node's seed file */
-function reviews(): array
+/** the one place that decides where reviews live; SHOP_REVIEWS points the checks at a file of their own */
+function reviewStore(): Shop\ReviewStore
 {
-    $file = is_file(REVIEWS_FILE) ? REVIEWS_FILE : __DIR__ . '/../../server/data/reviews.json';
-    try {
-        return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-    } catch (JsonException $e) {
-        throw new Shop\StoreError('the reviews file is broken', previous: $e);   // say what broke, keep the cause
-    }
+    static $store = null;
+    return $store ??= new Shop\JsonReviewStore(getenv('SHOP_REVIEWS') ?: REVIEWS_FILE, __DIR__ . '/../../server/data/reviews.json');
 }
 
-/** save a review and return it with its id: one request at a time (lock), and the file is replaced whole (rename) */
+/** all reviews */
+function reviews(): array
+{
+    return reviewStore()->all();
+}
+
+/** save a review and return it with its id */
 function addReview(array $review): array
 {
-    $lock = fopen(REVIEWS_FILE . '.lock', 'c');
-    flock($lock, LOCK_EX);                                   // the next request waits here
-    try {
-        $all = reviews();
-        $review = ['id' => count($all) + 1] + $review;       // the id rule of server.js
-        $all[] = $review;
-        $tmp = REVIEWS_FILE . '.' . getmypid() . '.tmp';
-        file_put_contents($tmp, json_encode($all, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
-        rename($tmp, REVIEWS_FILE);                          // readers see the old file or the new one, never half
-        return $review;
-    } finally {
-        flock($lock, LOCK_UN);
-        fclose($lock);
-    }
+    return reviewStore()->add($review);
 }
 
 /** a page cursor like server.js: "id:239" in base64url — the client treats it as an opaque string */

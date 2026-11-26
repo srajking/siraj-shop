@@ -21,3 +21,5 @@ Check the code without running it: `composer lint` (syntax, `strict_types`, `var
 An uncaught error returns `500 {"error":"server error","requestId":"…"}`; the same id is in `logs/php-error.log` with the cause.
 
 The URLs are the same as the Node API: point the Next site at it with `SHOP_API=http://localhost:8000/api`.
+
+Reviews live behind `Shop\ReviewStore`; the file is `data/reviews.json`, or the one named in `SHOP_REVIEWS` (the check scripts use their own).
