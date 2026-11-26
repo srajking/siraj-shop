@@ -14,28 +14,28 @@ if ($product === null) {
     echo "<!doctype html>\n<title>Not found · Siraj Shop</title>\n<h1>Not found</h1>\n";
     exit;
 }
-['name' => $name, 'price' => $price, 'stock' => $stock] = $product;
+$p = new Shop\SafeView($product);                                 // $p->name: always escaped, even inside "…"
 
-$priceText   = Shop\Price::text($price);                         // 19,000 IQD — same as toLocaleString("en")
+$priceText   = Shop\Price::text($p->raw('price'));               // 19,000 IQD — same as toLocaleString("en")
 $shop        = SHOP;                                       // a constant can't go inside "…"
-$description = "$name — $priceText at $shop";
+$description = "$p->name — $priceText at $shop";
 
 echo <<<HTML
     <!doctype html>
     <html lang="ar" dir="rtl">
     <head>
       <meta charset="utf-8">
-      <title>$name · {$shop}</title>
+      <title>$p->name · {$shop}</title>
       <meta name="description" content="$description">
     </head>
     <body>
-      <h1>$name</h1>
-      <p>$priceText · $stock in stock</p>
+      <h1>$p->name</h1>
+      <p>$priceText · $p->stock in stock</p>
 
     HTML;
 ?>
 <?php // the button words come from the Next site (AddToCart.tsx) ?>
-<?php if ($stock > 0): ?>
+<?php if ($p->raw('stock') > 0): ?>
   <button>Add to cart</button>
 <?php else: ?>
   <button disabled>No more in stock</button>

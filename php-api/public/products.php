@@ -26,10 +26,10 @@ $products = productList($sort, $q, $category);
 <body>
   <h1>Products</h1>
   <ul class="grid">
-<?php foreach ($products as ['id' => $id, 'name' => $name, 'price' => $price]): ?>
+<?php foreach ($products as $row): $p = new Shop\SafeView($row); ?>
     <li>
-      <h3><a href="/products/<?= $id ?>"><?= $name ?></a></h3>
-      <p><?= Shop\Price::text($price) ?></p>
+      <h3><a href="/products/<?= $p->id ?>"><?= $p->name ?></a></h3>
+      <p><?= Shop\Price::text($p->raw('price')) ?></p>
     </li>
 <?php endforeach; ?>
   </ul>
