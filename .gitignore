@@ -12,3 +12,4 @@ node_modules/
 # the PHP API saves its reviews here
 php-api/data/reviews.json*
 php-api/vendor/
+php-api/data/carts/

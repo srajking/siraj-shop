@@ -60,6 +60,31 @@ function parseCart(string $text): array
     return $items;
 }
 
+/** the factory for carts: the one place that knows the class and the folder (SHOP_CARTS for the checks) */
+function cartRepository(): Shop\CartRepository
+{
+    static $repo = null;
+    return $repo ??= new Shop\FileCartRepository(getenv('SHOP_CARTS') ?: __DIR__ . '/../data/carts');
+}
+
+/** this browser's cart id, like cartOf() in server.js: the "cart" cookie — a new cart (and cookie) when there is none */
+function cartId(): string
+{
+    $id = (string) ($_COOKIE['cart'] ?? '');
+    if (cartRepository()->has($id)) return $id;
+    $id = Shop\FileCartRepository::newId();
+    cartRepository()->save($id, []);
+    header("Set-Cookie: cart=$id; Path=/; HttpOnly; SameSite=Lax");
+    return $id;
+}
+
+/** the cart as GET /api/cart answers it — cartView() in server.js: each line with name and price, count, subtotal, total */
+function cartView(array $lines): array
+{
+    $items = array_map(fn (array $i): array => $i + ['name' => catalog()->find($i['id'])['name'], 'price' => catalog()->find($i['id'])['price']], array_values($lines));
+    return ['items' => $items] + cartSummary($items);
+}
+
 /** the same keys as cartView() in server.js: count, subtotal, total */
 function cartSummary(array $items): array
 {
@@ -98,6 +123,15 @@ function sendJson(int $status, mixed $data, array $headers = []): never
     header('Content-Type: application/json; charset=utf-8');
     foreach ($headers as $name => $value) header("$name: $value");
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    exit;
+}
+
+/** 204 like send(res, 204) in server.js: no body, and no Content-Type either */
+function sendNoContent(array $headers = []): never
+{
+    ini_set('default_mimetype', '');                     // PHP would add "text/html" by itself
+    http_response_code(204);
+    foreach ($headers as $name => $value) header("$name: $value");
     exit;
 }
 
