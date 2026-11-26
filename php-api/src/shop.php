@@ -155,19 +155,23 @@ function e(string $s): string
 }
 
 /**
- * The review rules, checked on the server. Returns null when the review is fine,
- * or the first error in the same shape as server.js: ['error' => …, field => what was sent].
- * server.js checks only the stars; the name and text rules are new here.
+ * The review rules, checked on the server: the body a customer sent → a clean review (name, stars, text),
+ * or an InvalidReview that says which field and what to answer. server.js checks only the stars; the rest are new here.
+ * A value of the wrong type (a list, a number) is the customer's mistake too — never a TypeError deeper down.
  */
-function reviewError(array $body): ?array
+function reviewFrom(array $body): array
 {
     $stars = $body['stars'] ?? null;
-    if (!is_int($stars) || $stars < 1 || $stars > 5) return ['error' => 'stars must be 1 to 5', 'stars' => $stars];
-    $name = trim((string) ($body['name'] ?? ''));
-    if ($name === '' || mb_strlen($name) > 40) return ['error' => 'name must be 1 to 40 letters', 'name' => mb_substr($name, 0, 50)];
-    $text = trim((string) ($body['text'] ?? ''));
-    if (mb_strlen($text) < 2 || mb_strlen($text) > 500) return ['error' => 'text must be 2 to 500 letters', 'length' => mb_strlen($text)];
-    return null;
+    if (!is_int($stars) || $stars < 1 || $stars > 5) throw Shop\InvalidReview::stars($stars);
+    $name = $body['name'] ?? '';
+    if (!is_string($name)) throw Shop\InvalidReview::name(null);
+    $name = trim($name);
+    if ($name === '' || mb_strlen($name) > 40) throw Shop\InvalidReview::name(mb_substr($name, 0, 50));
+    $text = $body['text'] ?? '';
+    if (!is_string($text)) throw Shop\InvalidReview::text(null);
+    $text = trim($text);
+    if (mb_strlen($text) < 2 || mb_strlen($text) > 500) throw Shop\InvalidReview::text(mb_strlen($text));
+    return ['name' => $name, 'stars' => $stars, 'text' => $text];
 }
 
 /** start the login session with safe cookie settings (HttpOnly, SameSite=Lax, ids only from the server) */

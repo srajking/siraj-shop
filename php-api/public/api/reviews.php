@@ -21,7 +21,11 @@ try {
     sendJson(400, ['error' => 'body is not valid JSON', 'detail' => $e->getMessage()]);
 }
 if (!is_array($body)) sendJson(400, ['error' => 'body is not valid JSON', 'detail' => 'not an object']);
-if ($error = reviewError($body)) sendJson(422, $error);
+try {
+    $clean = reviewFrom($body);
+} catch (Shop\InvalidReview $e) {                                    // the customer's mistake: answer it, don't log it
+    sendJson(422, $e->toArray());
+}
 
-$review = addReview(['productId' => $id, 'name' => trim($body['name']), 'stars' => $body['stars'], 'text' => trim($body['text'])]);
+$review = addReview(['productId' => $id] + $clean);
 sendJson(201, $review, ['Location' => "/api/products/$id/reviews/{$review['id']}"]);
