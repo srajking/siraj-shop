@@ -14,6 +14,7 @@ const ROUTES = [                                                     // pattern 
     '#^/api/reviews/summary$#'        => ['api/review-summary.php'],
     '#^/api/cart$#'                   => ['api/cart.php'],
     '#^/api/cart/items$#'             => ['api/cart-items.php'],
+    '#^/api/cart/items/(\d+)$#'       => ['api/cart-item.php', 'id'],
     '#^/api/cart/receipt$#'           => ['api/cart-receipt.php'],
     '#^/api/login$#'                  => ['api/login.php'],
     '#^/api/me$#'                     => ['api/me.php'],

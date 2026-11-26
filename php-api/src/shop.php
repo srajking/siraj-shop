@@ -67,6 +67,25 @@ function cartRepository(): Shop\CartRepository
     return $repo ??= new Shop\FileCartRepository(getenv('SHOP_CARTS') ?: __DIR__ . '/../data/carts');
 }
 
+/** the cart rules, given the store and the catalog — pages ask for this, never for the store's class */
+function cartService(): Shop\CartService
+{
+    static $service = null;
+    return $service ??= new Shop\CartService(cartRepository(), catalog());
+}
+
+/** the JSON body of a request like readJson() in server.js: 415 when it is not JSON, 400 when it does not parse */
+function jsonBody(): mixed
+{
+    $type = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (!str_starts_with($type, 'application/json')) sendJson(415, ['error' => 'send JSON', 'got' => $type ?: null]);
+    try {
+        return json_decode(file_get_contents('php://input'), true, flags: JSON_THROW_ON_ERROR);
+    } catch (JsonException $e) {
+        sendJson(400, ['error' => 'body is not valid JSON', 'detail' => $e->getMessage()]);
+    }
+}
+
 /** this browser's cart id, like cartOf() in server.js: the "cart" cookie — a new cart (and cookie) when there is none */
 function cartId(): string
 {
