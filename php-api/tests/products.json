@@ -1,0 +1,4 @@
+[
+  { "id": 1, "name": "دفتر A5", "price": 3000, "stock": 12, "category": "stationery" },
+  { "id": 3, "name": "حقيبة ظهر", "price": 19000, "stock": 3, "category": "bags" }
+]

@@ -86,14 +86,11 @@ function jsonBody(): mixed
     }
 }
 
-/** this browser's cart id, like cartOf() in server.js: the "cart" cookie — a new cart (and cookie) when there is none */
+/** this browser's cart id, like cartOf() in server.js: the "cart" cookie, or a new id and cookie — no file until an item */
 function cartId(): string
 {
-    $id = (string) ($_COOKIE['cart'] ?? '');
-    if (cartRepository()->has($id)) return $id;
-    $id = Shop\FileCartRepository::newId();
-    cartRepository()->save($id, []);
-    header("Set-Cookie: cart=$id; Path=/; HttpOnly; SameSite=Lax");
+    [$id, $new] = (new Shop\CartSession(Shop\FileCartRepository::newId(...)))->open((string) ($_COOKIE['cart'] ?? ''));
+    if ($new) header("Set-Cookie: cart=$id; Path=/; HttpOnly; SameSite=Lax");
     return $id;
 }
 

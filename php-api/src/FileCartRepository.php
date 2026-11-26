@@ -11,7 +11,7 @@ final class FileCartRepository implements CartRepository
 
     public function has(string $cartId): bool
     {
-        return self::validId($cartId) && is_file($this->file($cartId));
+        return self::isId($cartId) && is_file($this->file($cartId));
     }
 
     public function items(string $cartId): array
@@ -22,7 +22,7 @@ final class FileCartRepository implements CartRepository
 
     public function save(string $cartId, array $items): void
     {
-        if (!self::validId($cartId)) throw new \InvalidArgumentException('not a cart id');
+        if (!self::isId($cartId)) throw new \InvalidArgumentException('not a cart id');
         if (!is_dir($this->dir)) mkdir($this->dir, 0700, true);
         $tmp = $this->file($cartId) . '.' . getmypid() . '.tmp';
         file_put_contents($tmp, json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -38,7 +38,8 @@ final class FileCartRepository implements CartRepository
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
     }
 
-    private static function validId(string $id): bool
+    /** the shape of the ids newId() makes — so a cookie can never name another file */
+    public static function isId(string $id): bool
     {
         return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $id);
     }
