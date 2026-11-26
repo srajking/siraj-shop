@@ -31,15 +31,10 @@ set_exception_handler(function (Throwable $e): void {
     sendJson(500, ['error' => 'server error', 'requestId' => $id]);
 });
 
-/** one row of products.json → a Product: the keys become named arguments — a wrong type or a missing field stops here */
+/** kept for the pages and tools that call it — the rule itself lives in Product, where composer can load it */
 function productFrom(array $row): Shop\Product
 {
-    // the category text becomes a Category case — a value not in the list stops here
-    try {
-        return new Shop\Product(...['category' => Shop\Category::from($row['category'])] + $row);
-    } catch (TypeError|ValueError|ArgumentCountError $e) {   // PHP's own errors about this row → one shop error
-        throw new Shop\InvalidProduct('product ' . ($row['id'] ?? '?') . ': ' . $e->getMessage(), previous: $e);
-    }
+    return Shop\Product::fromRow($row);
 }
 
 // the products come from the same file Node reads — one list for both servers

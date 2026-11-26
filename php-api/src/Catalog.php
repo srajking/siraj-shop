@@ -13,7 +13,7 @@ final class Catalog
     public function all(): array
     {
         return $this->byId ??= array_column(array_map(
-            fn (array $row): array => \productFrom($row)->toArray(),
+            fn (array $row): array => Product::fromRow($row)->toArray(),
             $this->file->rows(),
         ), null, 'id');
     }

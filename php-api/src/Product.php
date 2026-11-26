@@ -19,6 +19,17 @@ class Product
         if ($stock < 0) throw new InvalidProduct("product $id: stock cannot be negative, got $stock");
     }
 
+    /** one row of products.json → a Product: the keys become named arguments — a wrong type or a missing field stops here */
+    public static function fromRow(array $row): self
+    {
+        // the category text becomes a Category case — a value not in the list stops here
+        try {
+            return new self(...['category' => Category::from($row['category'])] + $row);
+        } catch (\TypeError|\ValueError|\ArgumentCountError $e) {   // PHP's own errors (global names: \) → one shop error
+            throw new InvalidProduct('product ' . ($row['id'] ?? '?') . ': ' . $e->getMessage(), previous: $e);
+        }
+    }
+
     /** the shape the API sends: the same keys, in the same order, as the JSON file */
     public function toArray(): array
     {
