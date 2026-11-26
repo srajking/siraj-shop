@@ -5,6 +5,8 @@ namespace Shop;
 /** reviews in one JSON file: one writer at a time (lock), replaced whole (rename) */
 final class JsonReviewStore implements ReviewStore
 {
+    use ReadsJson;
+
     public function __construct(
         private readonly string $file,   // where new reviews are written
         private readonly string $seed,   // read until the first review is saved (Node's file)
@@ -12,13 +14,10 @@ final class JsonReviewStore implements ReviewStore
 
     public function all(): array
     {
-        $file = is_file($this->file) ? $this->file : $this->seed;
-        try {
-            return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new StoreError('the reviews file is broken', previous: $e);   // say what broke, keep the cause
-        }
+        return $this->readJson(is_file($this->file) ? $this->file : $this->seed);
     }
+
+    protected function what(): string { return 'reviews'; }
 
     public function add(array $review): array
     {

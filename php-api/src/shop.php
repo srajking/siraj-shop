@@ -46,7 +46,7 @@ function productFrom(array $row): Shop\Product
 // every row goes through Product first, so the rest of the code only ever sees checked data
 define('PRODUCTS', array_column(array_map(
     fn (array $row): array => productFrom($row)->toArray(),
-    json_decode(file_get_contents(__DIR__ . '/../../server/data/products.json'), true, flags: JSON_THROW_ON_ERROR)
+    (new Shop\ProductFile(__DIR__ . '/../../server/data/products.json'))->rows()
 ), null, 'id'));
 
 const REVIEWS_FILE = __DIR__ . '/../data/reviews.json';   // the PHP shop's reviews (not committed)
