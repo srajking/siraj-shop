@@ -13,10 +13,10 @@ class Product
         public readonly Category $category,
     ) {
         // the rules every product keeps for its whole life — checked once, here, so no page has to
-        if ($id < 1) throw new \InvalidArgumentException("product id must be 1 or more, got $id");
-        if (trim($name) === '') throw new \InvalidArgumentException("product $id: name is empty");
-        if ($price < 1) throw new \InvalidArgumentException("product $id: price must be more than 0, got $price");
-        if ($stock < 0) throw new \InvalidArgumentException("product $id: stock cannot be negative, got $stock");
+        if ($id < 1) throw new InvalidProduct("product id must be 1 or more, got $id");
+        if (trim($name) === '') throw new InvalidProduct("product $id: name is empty");
+        if ($price < 1) throw new InvalidProduct("product $id: price must be more than 0, got $price");
+        if ($stock < 0) throw new InvalidProduct("product $id: stock cannot be negative, got $stock");
     }
 
     /** the shape the API sends: the same keys, in the same order, as the JSON file */

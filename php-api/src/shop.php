@@ -20,6 +20,11 @@ set_exception_handler(function (Throwable $e): void {
         'at'        => $cause->getFile() . ':' . $cause->getLine(),
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     if (PHP_SAPI === 'cli') {
+        // a data problem: say what to fix (exit 2); anything else is a bug: see the log (exit 1)
+        if ($e instanceof Shop\DataError) {
+            fwrite(STDERR, 'data error: ' . $e->getMessage() . "\n");
+            exit(2);
+        }
         fwrite(STDERR, "error $id — see the log\n");
         exit(1);
     }
@@ -30,7 +35,11 @@ set_exception_handler(function (Throwable $e): void {
 function productFrom(array $row): Shop\Product
 {
     // the category text becomes a Category case — a value not in the list stops here
-    return new Shop\Product(...['category' => Shop\Category::from($row['category'])] + $row);
+    try {
+        return new Shop\Product(...['category' => Shop\Category::from($row['category'])] + $row);
+    } catch (TypeError|ValueError|ArgumentCountError $e) {   // PHP's own errors about this row → one shop error
+        throw new Shop\InvalidProduct('product ' . ($row['id'] ?? '?') . ': ' . $e->getMessage(), previous: $e);
+    }
 }
 
 // the products come from the same file Node reads — one list for both servers, keyed by id;
