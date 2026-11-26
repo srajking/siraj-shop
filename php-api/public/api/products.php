@@ -10,7 +10,7 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD'], true)) {
 
 if (isset($_GET['id'])) {                                       // one product
     $id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-    $product = is_int($id) ? (PRODUCTS[$id] ?? null) : null;
+    $product = is_int($id) ? catalog()->find($id) : null;
     $product === null
         ? sendJson(404, ['error' => 'product not found', 'id' => (string) $_GET['id']])
         : sendCached($product);

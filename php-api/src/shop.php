@@ -42,12 +42,15 @@ function productFrom(array $row): Shop\Product
     }
 }
 
-// the products come from the same file Node reads — one list for both servers, keyed by id;
-// every row goes through Product first, so the rest of the code only ever sees checked data
-define('PRODUCTS', array_column(array_map(
-    fn (array $row): array => productFrom($row)->toArray(),
-    (new Shop\ProductFile(__DIR__ . '/../../server/data/products.json'))->rows()
-), null, 'id'));
+// the products come from the same file Node reads — one list for both servers
+const PRODUCTS_FILE = __DIR__ . '/../../server/data/products.json';
+
+/** the one catalog of this request, built on first use: a page that never asks for products never reads the file */
+function catalog(): Shop\Catalog
+{
+    static $catalog = null;
+    return $catalog ??= new Shop\Catalog(new Shop\ProductFile(PRODUCTS_FILE));
+}
 
 const REVIEWS_FILE = __DIR__ . '/../data/reviews.json';   // the PHP shop's reviews (not committed)
 
@@ -57,7 +60,8 @@ function parseCart(string $text): array
     $items = [];
     foreach (explode(',', $text) as $pair) {
         [$id, $qty] = array_map('intval', explode(':', $pair));
-        $items[] = ['id' => $id, 'name' => PRODUCTS[$id]['name'], 'price' => PRODUCTS[$id]['price'], 'qty' => $qty];
+        $p = catalog()->find($id);
+        $items[] = ['id' => $id, 'name' => $p['name'], 'price' => $p['price'], 'qty' => $qty];
     }
     return $items;
 }
@@ -86,7 +90,7 @@ function productSorts(): array
 /** the product list with GET /api/products options; the sort name must be a key of productSorts() */
 function productList(?string $sort = null, string $q = '', ?string $category = null): array
 {
-    $list = array_values(PRODUCTS);
+    $list = array_values(catalog()->all());
     if ($q !== '')          $list = array_filter($list, fn (array $p): bool => str_contains($p['name'], $q));
     if ($category !== null) $list = array_filter($list, fn (array $p): bool => $p['category'] === $category);
     if ($sort !== null)     usort($list, productSorts()[$sort]);

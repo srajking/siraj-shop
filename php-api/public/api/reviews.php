@@ -6,7 +6,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../src/shop.php';
 
 $id = filter_var($_GET['product'] ?? null, FILTER_VALIDATE_INT);   // $_GET, not filter_input: the front controller sets it
-if (!is_int($id) || !isset(PRODUCTS[$id])) sendJson(404, ['error' => 'product not found', 'id' => $id]);
+if (!is_int($id) || catalog()->find($id) === null) sendJson(404, ['error' => 'product not found', 'id' => $id]);
 
 $mine = array_values(array_filter(reviews(), fn (array $r): bool => $r['productId'] === $id));
 $method = $_SERVER['REQUEST_METHOD'];

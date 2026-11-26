@@ -8,7 +8,7 @@ require __DIR__ . '/../src/shop.php';
 
 // ?id= arrives as text: accept only a whole number from 1 — anything else is "not found"
 $id      = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-$product = is_int($id) ? (PRODUCTS[$id] ?? null) : null;
+$product = is_int($id) ? catalog()->find($id) : null;
 if ($product === null) {
     http_response_code(404);                                 // like notFound() in Next — status codes: chapter 13
     echo "<!doctype html>\n<title>Not found · Siraj Shop</title>\n<h1>Not found</h1>\n";
