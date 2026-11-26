@@ -49,14 +49,13 @@ function catalog(): Shop\Catalog
 
 const REVIEWS_FILE = __DIR__ . '/../data/reviews.json';   // the PHP shop's reviews (not committed)
 
-/** "3:2,2:3" → items with id, name, price, qty */
+/** "3:2,2:3" → items with id, name, price, qty — the text is checked by Cart (one line per product) */
 function parseCart(string $text): array
 {
     $items = [];
-    foreach (explode(',', $text) as $pair) {
-        [$id, $qty] = array_map('intval', explode(':', $pair));
-        $p = catalog()->find($id);
-        $items[] = ['id' => $id, 'name' => $p['name'], 'price' => $p['price'], 'qty' => $qty];
+    foreach (Shop\Cart::parse($text, catalog())->lines() as $line) {
+        $p = catalog()->find($line->productId);
+        $items[] = ['id' => $line->productId, 'name' => $p['name'], 'price' => $p['price'], 'qty' => $line->qty];
     }
     return $items;
 }
