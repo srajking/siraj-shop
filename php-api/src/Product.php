@@ -10,7 +10,7 @@ class Product
         public readonly string $name,
         public readonly int $price,
         public readonly int $stock,
-        public readonly string $category,
+        public readonly Category $category,
     ) {
         // the rules every product keeps for its whole life — checked once, here, so no page has to
         if ($id < 1) throw new \InvalidArgumentException("product id must be 1 or more, got $id");
@@ -22,6 +22,6 @@ class Product
     /** the shape the API sends: the same keys, in the same order, as the JSON file */
     public function toArray(): array
     {
-        return ['id' => $this->id, 'name' => $this->name, 'price' => $this->price, 'stock' => $this->stock, 'category' => $this->category];
+        return ['id' => $this->id, 'name' => $this->name, 'price' => $this->price, 'stock' => $this->stock, 'category' => $this->category->value];
     }
 }

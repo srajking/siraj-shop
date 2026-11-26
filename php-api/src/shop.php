@@ -29,7 +29,8 @@ set_exception_handler(function (Throwable $e): void {
 /** one row of products.json → a Product: the keys become named arguments — a wrong type or a missing field stops here */
 function productFrom(array $row): Shop\Product
 {
-    return new Shop\Product(...$row);
+    // the category text becomes a Category case — a value not in the list stops here
+    return new Shop\Product(...['category' => Shop\Category::from($row['category'])] + $row);
 }
 
 // the products come from the same file Node reads — one list for both servers, keyed by id;
