@@ -6,5 +6,6 @@
     "autoload": { "psr-4": { "Shop\\": "src/" } },
     "autoload-dev": { "psr-4": { "Shop\\Tests\\": "tests/" } },
     "scripts": { "lint": "php bin/lint.php src public bin tests", "test": "php bin/test.php",
-                 "layers": "php bin/layers.php", "answers": "php bin/answers.php" }
+                 "layers": "php bin/layers.php", "answers": "php bin/answers.php",
+                 "routes": "php bin/routes.php" }
 }
