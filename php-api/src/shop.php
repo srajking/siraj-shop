@@ -86,12 +86,13 @@ function checkout(): Shop\Checkout
 }
 
 /** the JSON body of a request like readJson() in server.js: 415 when it is not JSON, 400 when it does not parse */
-function jsonBody(): mixed
+function jsonBody(?Shop\Request $req = null): mixed
 {
-    $type = $_SERVER['CONTENT_TYPE'] ?? '';
+    $req ??= Shop\Request::fromGlobals();
+    $type = $req->header('Content-Type') ?? '';
     if (!str_starts_with($type, 'application/json')) sendJson(415, ['error' => 'send JSON', 'got' => $type ?: null]);
     try {
-        return json_decode(file_get_contents('php://input'), true, flags: JSON_THROW_ON_ERROR);
+        return json_decode($req->body(), true, flags: JSON_THROW_ON_ERROR);
     } catch (JsonException $e) {
         sendJson(400, ['error' => 'body is not valid JSON', 'detail' => $e->getMessage()]);
     }
@@ -143,37 +144,28 @@ function productList(?string $sort = null, string $q = '', ?string $category = n
     return array_values($list);
 }
 
-/** send JSON like send() in server.js and stop: status, Content-Type, the body as JSON.stringify writes it */
+/** send JSON like send() in server.js and stop — the answer itself is a Shop\Response */
 function sendJson(int $status, mixed $data, array $headers = []): never
 {
-    http_response_code($status);
-    header('Content-Type: application/json; charset=utf-8');
-    foreach ($headers as $name => $value) header("$name: $value");
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-    exit;
+    Shop\Response::json($data, $status, $headers)->send();
 }
 
 /** 204 like send(res, 204) in server.js: no body, and no Content-Type either */
 function sendNoContent(array $headers = []): never
 {
-    ini_set('default_mimetype', '');                     // PHP would add "text/html" by itself
-    http_response_code(204);
-    foreach ($headers as $name => $value) header("$name: $value");
-    exit;
+    Shop\Response::noContent($headers)->send();
 }
 
 /** like cached() in server.js: an ETag from the body, Cache-Control, and 304 when the browser has it already */
 function sendCached(mixed $data, array $headers = []): never
 {
-    $body = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-    $etag = '"' . substr(rtrim(strtr(base64_encode(sha1($body, true)), '+/', '-_'), '='), 0, 16) . '"';
-    $headers += ['ETag' => $etag, 'Cache-Control' => 'max-age=30'];
-    if (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
-        http_response_code(304);
-        foreach ($headers as $name => $value) header("$name: $value");
-        exit;
+    $res  = Shop\Response::json($data, 200, $headers);
+    $etag = '"' . substr(rtrim(strtr(base64_encode(sha1($res->body, true)), '+/', '-_'), '='), 0, 16) . '"';
+    $res  = $res->withHeaders(['ETag' => $etag, 'Cache-Control' => 'max-age=30'] + $headers);
+    if ((Shop\Request::fromGlobals()->header('If-None-Match') ?? '') === $etag) {
+        (new Shop\Response(304, array_diff_key($res->headers(), ['Content-Type' => 1])))->send();
     }
-    sendJson(200, $data, $headers);
+    $res->send();
 }
 
 /** the one place that decides where reviews live; SHOP_REVIEWS points the checks at a file of their own */

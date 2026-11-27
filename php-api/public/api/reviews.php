@@ -13,13 +13,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') sendJson(200, $mine);
 if ($method !== 'POST') sendJson(405, ['error' => 'method not allowed', 'allow' => ['GET', 'POST']], ['Allow' => 'GET, POST']);
 
-$type = $_SERVER['CONTENT_TYPE'] ?? '';
-if (!str_starts_with($type, 'application/json')) sendJson(415, ['error' => 'send JSON', 'got' => $type ?: null]);
-try {
-    $body = json_decode(file_get_contents('php://input'), true, flags: JSON_THROW_ON_ERROR);
-} catch (JsonException $e) {
-    sendJson(400, ['error' => 'body is not valid JSON', 'detail' => $e->getMessage()]);
-}
+$body = jsonBody();                                                  // 415 / 400: one place, src/shop.php
 if (!is_array($body)) sendJson(400, ['error' => 'body is not valid JSON', 'detail' => 'not an object']);
 try {
     $clean = reviewFrom($body);

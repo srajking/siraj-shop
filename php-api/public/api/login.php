@@ -4,9 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../src/shop.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') sendJson(405, ['error' => 'method not allowed', 'allow' => ['POST']], ['Allow' => 'POST']);
-$type = $_SERVER['CONTENT_TYPE'] ?? '';
-if (!str_starts_with($type, 'application/json')) sendJson(415, ['error' => 'send JSON', 'got' => $type ?: null]);
-$body = json_decode(file_get_contents('php://input'), true);
+$body = jsonBody();                                                  // 415 / 400 like readJson() in server.js — broken JSON is not a wrong password
 $username = (string) ($body['username'] ?? '');
 
 $users = require __DIR__ . '/../../data/users.php';
